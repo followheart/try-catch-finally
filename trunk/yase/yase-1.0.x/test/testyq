@@ -1,0 +1,26 @@
+export DOCUMENT_ROOT="/usr/local/httpd/htdocs"
+export HTTP_REFERER="http://localhost/search.html"
+export QUERY_STRING="q=alice+cheshire+cat&yp=sample"
+export YASE_HOME=/home/dibyendu/yase
+$YASE_HOME/bin/yasequery > x.html
+unset QUERY_STRING
+rm -f /tmp/yy.$$
+echo ":yp=/usr/local/httpd/htdocs/sample" > /tmp/yy.$$
+echo ":sm=boolean" >> /tmp/yy.$$
+echo "(alice and cat) or (cat and cheshire)" >> /tmp/yy.$$
+echo "" >> /tmp/yy.$$
+cat /tmp/yy.$$
+$YASE_HOME/bin/yasequery < /tmp/yy.$$ > x1.xml
+rm -f /tmp/yy.$$
+echo ":yp=/usr/local/httpd/htdocs/sample" > /tmp/yy.$$
+echo "alice cat cheshire" >> /tmp/yy.$$
+echo "" >> /tmp/yy.$$
+cat /tmp/yy.$$
+$YASE_HOME/bin/yasequery < /tmp/yy.$$ > x2.xml
+rm -f /tmp/yy.$$
+echo ":yp=/usr/local/httpd/htdocs" > /tmp/yy.$$
+echo "alice cat cheshire" >> /tmp/yy.$$
+echo "" >> /tmp/yy.$$
+cat /tmp/yy.$$
+$YASE_HOME/bin/yasequery < /tmp/yy.$$ > x3.xml
+rm -f /tmp/yy.$$

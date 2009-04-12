@@ -1,0 +1,15 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:602: checking for a BSD compatible install
+configure:655: checking whether make sets ${MAKE}
+configure:683: checking how to run the C preprocessor
+configure:763: checking for AIX
+configure:788: checking for mingw32 environment
+configure:818: checking for Cygwin environment
+configure:856: checking for dirent.h that defines DIR
+configure:894: checking for opendir in -ldir
+configure:977: checking for sys/wait.h that is POSIX.1 compatible
+configure:1022: checking for unistd.h
+configure:1062: checking for strdup
+configure:1062: checking for snprintf

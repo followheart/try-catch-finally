@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>Merge Sort Algorithm in YASE</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="">
+<meta name="Keywords" content="">
+</head>
+<body>
+<h1>Merge sort</h1>
+
+<p>In order to efficiently create the Btree, the list of terms needs to be sorted. Since the list can be huge, I use a merge sort algorithm to generate this list.</p>
+
+<p>First words are inserted into a balanced binary tree. Once a predefined memory limit is reached, the data is dumped into a temporary file t1, and the tree deleted.</p>
+
+<p>A new binary tree is created and (remaining) words inserted into this tree until the predefined memory limit is reached. This time too the data is dumped - however it is also merged with the data in the previous temporary file t1. At the end of the process, the file t1 is replaced by the new temporary file, and the process begins again with deletion/creation of a new balanced binary tree.</p>
+
+<p>I use a balanced binary tree to maintain a sorted list of words in memory. An alternative is to use a hash table to store the words initially, then convert the table into an array and perform a quick sort on it. Not sure which process is ultimately more efficient.</p>
+
+<p>The merge itself is performed using the following logic:</p>
+
+<pre class="code">
+merge(a, b)
+{
+    get a;
+    get b;
+    while ( a || b ) {
+        while ( a &amp;&amp; (!b || a = b) ) {
+            output a;
+            if ( b &amp;&amp; a == b ) {
+                output b;
+                get b;
+            }
+            get a;
+        }
+        if (b) {
+            output b;
+            get b;
+        }
+    }
+}
+</pre>
+
+<p>I tested this algorithm using the following program:</p>
+
+<pre class="code">
+#include &lt;stdio.h&gt;
+
+char *aa = "cdhpqr";
+char *bb = "bcefgiklmn";
+
+int main()
+{
+    char *a = aa;
+    char *b = bb;
+
+    while ( *a || *b ) {
+        while ( *a &amp;&amp; (!*b || *a &lt;= *b) ) {
+            putchar(*a);
+            if ( *b &amp;&amp; *a == *b ) {
+                putchar(*b);
+                b++;
+            }
+            a++;
+        }
+        if (*b) {
+            putchar(*b);    
+            b++;
+        }
+    }
+    putchar('\n');
+    return 0;
+}
+</pre>
+
+<hr>
+Copyright &copy; 2000-2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a>
+</body>
+</html>
+

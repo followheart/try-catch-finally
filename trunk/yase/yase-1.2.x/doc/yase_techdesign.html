@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<LINK rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<LINK rel="stylesheet" type="text/css" href="yase.css">
+<TITLE>Design Issues</TITLE>
+<META name="Author" content="Dibyendu Majumdar">
+<META name="Description" content="">
+<META name="Keywords" content="">
+</HEAD>
+<BODY>
+<H1>YASE Design Notes</H1>
+
+<p>
+The hardest part of any project is documentation. Here I attempt to jot down
+some ideas related to future work in YASE.
+</p>
+
+<h2>Boolean queries </h2>
+<p>
+The most efficient way of implementing Boolean operations is to use bit-maps. Since YASE identifies documents using numbers starting from 0, each document can be represented by a bit. If the bit is ON, it would mean the document is selected, else not. 
+</p>
+
+<p>
+To support large document collections, however, simple bitmaps are not adequate. I need some way of creating bitmaps that are efficient in space. Unused bits must not be actually allocated. The current bitmap implementation
+is a simple one.
+</p>
+
+<p>
+The current design of the boolean expression parser does not allow for any optimisation of the execution plan. The parser executes the query <i>while</i> it is being parsed. In order to optimise the query execution plan, it would be necessary to generate an intermediate parse tree.
+</p>
+
+<h2>
+Handling changes to document collection
+</h2>
+
+<p>
+This is one of the most difficult features to implement. 
+</p>
+
+<p>
+There are two possibilities. Either we are adding a new document, or
+we are replacing an existing document.
+</p>
+
+<p>
+When replacing a document, the first step is to delete the previous version
+of the document. To do this, we need to retrieve the document details for the previous version. Unfortunately, YASE does not have an efficient means of retrieving a document by name. This is because once a document has been stored, it is always retrieved by the document number. One possibility is to create a name index temporarily.
+</p>
+
+<p>
+Once the old version of the document has been retrieved, find all terms occuring in the old document. Again, YASE has no efficient way of recovering information about terms belonging to a document. The only way is to scan through the postings of each and every term to see if the term occurred in the document. To do this efficiently, we need to somehow first identify <i>all</i> the documents that are to be replaced and then scan the postings file and build up in memory a list of all terms contained in these documents.
+</p>
+
+<p>
+For each term found in the previous step, we have to remove the document reference from the postings file, and adjust term frequency (TF) both in the postings file and in the BTree.
+</p>
+
+<p>
+Finally, we have to delete details of the old document from yase.docs, yase.files and yase.docptrs.
+</p>
+
+<p>
+In comparison to above, the logic for adding a document is simpler.
+</p>
+
+<p>
+We add the document to yase.files, yase.docs and yase.docptrs. We scan the document for terms, and for each term found, we add the document reference to the term's list of documents in the posting file, and adjust term frequency (TF). 
+</p>
+
+<p>
+Once all the documents have been added, we rebuild document weights by 
+scanning all terms and postings. The reason this must be recomputed for all
+documents is because the document weight is dependent upon certain global
+parameters which would have changed as a result of the changes to the
+collection.
+</p>
+
+<p>
+In conclusion, I think that replacing documents is not so easy with the
+current design.   
+</p>
+
+
+<HR>
+Copyright &copy; 2000-2002 by <A href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</A>
+</BODY>
+</HTML>
+

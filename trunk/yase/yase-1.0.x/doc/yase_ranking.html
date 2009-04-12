@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<LINK rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<LINK rel="stylesheet" type="text/css" href="yase.css">
+<TITLE>Query Ranking Algorithm in YASE</TITLE>
+<META name="Author" content="Dibyendu Majumdar">
+<META name="Description" content="">
+<META name="Keywords" content="">
+</HEAD>
+<BODY>
+<H1>Query Ranking in YASE</H1>
+
+<P>When processing a query YASE attempts to retrieve documents and order them by their relevance to the query. A statistical algorithm is used to determine the 'rank' of each document retrieved for the query. This is described below.</P>
+
+<P>The algorithm YASE uses to rank documents has the following characteristics.</P>
+
+<OL>
+<LI>Each term in a YASE index is assigned a weight which relects the relative importance of the term within the collection. Terms weights are inversely proportional to their popularity - that is, terms which appear in more documents are assigned lower weights than terms appearing in few documents.</LI>
+
+<LI>The frequency of a term within a document also affects the way YASE ranks a document. If a query term occurs many times, the document's rank is increased logarithmically.</LI>
+
+<LI>YASE attempts to ignore the overall length of a document - that is, a longer document containing many occurences of a term is not considered to be a better match than a shorter document containing fewer occurences of the same term.</LI>
+
+<LI>YASE also considers the number of times a term appears in the query when ranking the results. If a term occurs more than once in the query, its weight is increased logarithmically.</LI>
+
+<LI>When assigning weights to terms, YASE does not consider the position of the term within the document. Therefore a term appearing in the title is not treated any differently to a term appearing elsewhere.</LI>
+</OL>
+
+<P>The actual calculations performed by YASE are described below. First, some definitions are necessary.</P>
+
+<H2>Definitions</H2>
+
+<DL>
+<DT>term (T)</DT>
+
+<DD>a word indexed by YASE. Each document is considered to be a list of words. YASE indexes all words appearing in a document.</DD>
+
+<DT>term frequency (TF)</DT>
+
+<DD>the number of documents a term appears in.</DD>
+
+<DT>document term freqency (DTF)</DT>
+
+<DD>the number of times a term appears within a particular document.</DD>
+
+<DT>collection size (N)</DT>
+
+<DD>number of documents in the collection.</DD>
+
+<DT>inverse document frequency (IDF)</DT>
+
+<DD>this is calculated as log(1 + N/TF). This represents the term weight.</DD>
+
+<DT>document term weight (DTW)</DT>
+
+<DD>this is the weight of a term within a document, and is calculated as ((1 + log(DTF)) * IDF).</DD>
+
+<DT>document weight (DWT)</DT>
+
+<DD>this is calculated as the Square Root of the sum of (DTW * DTW) for all terms in the document. This represents the 'length' of the document and is used to normalise the ranking.</DD>
+
+<DT>query term frequency (QTF)</DT>
+
+<DD>this is the number of times a term appears in the query.</DD>
+
+<DT>query max frequency (QMF)</DT>
+
+<DD>the maximum frequency of any term within the query.</DD>
+
+<DT>query term weight (QTW)</DT>
+
+<DD>the weight given to each term in the query. This is calculated as ((0.5 + (0.5 * (QTF)/(QMF))) * (IDF)).</DD>
+</DL>
+
+<H2>Algorithm</H2>
+
+<P>The ranking algorithm proceeds as follows.</P>
+
+<OL>
+<LI>For each query term, QTW is calculated.</LI>
+
+<LI>The term is searched in the index. If found, all documents in which the term appears are retrieved. Against each document, a rank is accumulated by adding the product of DTW and QTW (DTW * QTW) for each query term that is found in the document.</LI>
+
+<LI>Once all terms have been retrieved, we have a list of ranked documents. The ranking is normalised by dividing the rank of each document by its DWT.</LI>
+
+<LI>Finally, documents are sorted by decreasing rank, and results displayed to the user.</LI>
+</OL>
+
+<H2>Notes</H2>
+
+<P>As can be seen above, in order to rank documents YASE needs to maintain some statistics about terms and documents. The following table lists the statistic and the file where it is stored.</P>
+
+<TABLE border="1" cellspacing="0" cellpadding="0" width="100%">
+<CAPTION align="left">Statistics</CAPTION>
+<TR align="left">
+<TH>Statistic</TH>
+<TH>File</TH>
+</TR>
+
+<TR align="left">
+<TD>N (collection size)</TD>
+<TD>yase.info</TD>
+</TR>
+
+<TR align="left">
+<TD>DWT (document weight)</TD>
+<TD>yase.docptrs</TD>
+</TR>
+
+<TR align="left">
+<TD>TF (term frequency)</TD>
+<TD>yase.btree and yase.postings (yase.btree is used for efficiency)</TD>
+</TR>
+
+<TR align="left">
+<TD>DTF (document term frequency)</TD>
+<TD>yase.postings</TD>
+</TR>
+</TABLE>
+
+<P>See <A href="yase_files.html">YASE file formats</A> for details about the files mentioned above.</P>
+
+<HR>
+Copyright &copy; 2000-2002 by <A href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</A>
+</BODY>
+</HTML>
+

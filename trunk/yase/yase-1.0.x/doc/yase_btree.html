@@ -1,0 +1,233 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>YASE Btree Index structure</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="">
+<meta name="Keywords" content="">
+</head>
+
+<body>
+
+<h1>YASE BTree index</h1>
+
+<p>
+YASE implements the index as a btree. Terms are stored in sorted order,
+along with frequency (number of documents the term occurs in) and an offset
+into the postings file. 
+</p>
+
+<p>
+The design of the btree (implemented in btree.h and btree.c) is described here.
+</p>
+
+<h2>
+Structure of a node
+</h2>
+
+<p>
+Each node in the tree contains a list of entries. An entry consists of
+a <tt>key</tt>, a <tt>value</tt> and document count (<tt>doccnt</tt>), and optionally a pointer to a child node (<tt>ptrchild</tt>).The <tt>ptrchild</tt> is not necessary in leaf nodes.<p>
+
+<p>
+The indexed term is stored as the <tt>key</tt>, the file offset in the postings file (<tt>yase.postings</tt>) is the stored as <tt>value</tt>, and the term frequency (i.e. number of documents the term appears in) is stored as <tt>doccnt</tt>.
+</p>
+
+<p>
+An extra <tt>ptrchild</tt> is stored with each node - in inner nodes, this points to the child node containing keys alphabetically smaller than the first key in the node. In leaf nodes this is set to 0.
+</p>
+
+<IMG SRC="btreenode.jpg">
+
+<p>
+Logically, a btreenode may be represented by a C structure as follows:
+
+<pre class="code">
+struct entry;
+
+struct btreenode {
+	unsigned short flags;
+	unsigned short freespace;
+	unsigned short no_of_entries;
+	long ptrchild;
+	struct entry array_of_entries[no_of_entries];
+};
+</pre>
+</p>
+
+<p>
+Each node maintains an entry count - which is equal to the number of
+entries in the node, and freespace, which tracks the amount of freespace in
+the node.
+</p>
+
+<h2>
+Compression
+</h2>
+
+<p>
+Entries in the node are stored in a compressed form. The format used can
+be represented as a C structure as follows:
+</p>
+
+<pre class="code">
+struct {
+ unsigned char prefix_len;
+ unsigned char key_len;
+ unsigned ptrchild_len : 4;
+ unsigned value_len    : 4;
+ unsigned doccnt_len   : 4;             /* 0 if doccnt_len &lt;= 0x0f */
+ unsigned doccnt       : 4;             /* 0 if doccnt_len &gt; 0x0f  */
+ unsigned char key[key_len];
+ unsigned char ptrchild[ptrchild_len];
+ unsigned char value[value_len];
+ unsigned char doccnt[doccnt_len];      /* used if doccnt_len &gt; 0x0f */
+}
+</pre>
+
+<p>
+prefix_len tracks the number of bytes a key has common with its
+predecessor.
+</p>
+
+<p>
+key_len tracks the size of the key (excluding prefix) in bytes.
+</p>
+
+<p>
+value_len tracks the number of bytes used to store value.
+</p>
+
+<p>
+ptrchild_len tracks the number of bytes used to store a ptrchild.
+</p>
+
+<p>
+doccnt_len tracks the number of bytes used to store a doccnt. If it is 0, 
+then doccnt is less than or equal to 0x0f (15) and is stored in the next
+four bits. If it is &gt; 0, then doccnt is &gt; 0x0f (15) and is stored
+at the end of the entry in the same way value and ptrchild are stored.
+</p>
+
+<p>
+Above scheme allows most term frequencies to be stored in a single byte 
+of storage.
+</p>
+
+<p>
+Value, doccnt (if &gt; 0x0f) and ptrchild are stored in reverse byte order 
+in binary form. Only significant bytes are stored. No space is used if value or
+ptrchild is equal to 0 - thus leaf nodes do not consume any space
+for ptrchild fields. Term frequency (doccnt) can never be 0.
+</p>
+
+<h2>
+Maximum key size
+</h2>
+
+<p>
+The maximum length of a key is 254. This is because the length of
+the key is stored in an 'unsigned char'.
+</p>
+
+<h2>
+Trailing spaces in keys
+</h2>
+
+<p>
+Trailing spaces are significant. Ofcourse, the calling application can and
+should remove any trailing spaces from a key. This is what YASE does.
+</p>
+
+<h2>
+Case sensitivity
+</h2>
+
+<p>
+Key comparison is case sensistive. Caller can case convert the key to either
+upper case or lower case and achieve case insensitivity. YASE converts all
+keys to lower case.
+</p>
+
+<h2>
+Duplicate keys
+</h2>
+
+<p>
+At this point duplicate keys are not allowed.
+I may add support for this later.
+</p>
+
+<h2>
+Building a tree
+</h2>
+
+<p>
+A tree is built from bottom up. A sorted list of keys and values is required
+as input. First the leaf nodes are built, then the parent nodes, then
+grand-parent nodes, and so on until the root node is built. As each level
+is built, keys for the higher level are stored in a temporary file.
+</p>
+<p>
+NOTE: The last node on any level may end up containing zero keys.
+</p>
+<p>
+YASE uses merge-sort algorithm to build the initial sorted list of
+terms. Terms are read into a balanced binary search tree,
+and when a predefined memory limit is reached, the tree is
+merged with data from previous passes into a temporary file.
+</p>
+
+<h2>
+Some important points regarding nodes
+</h2>
+<ul>
+<li>
+A node always maintains a pointer to the current key.
+</li>
+<li>
+The pointer to current key ranges from 1 to keycount+1 - when the pointer is 
+at keycount+1 it means we are past the last key and therefore at EOF.
+An empty node always has the pointer set to 1 - which given that
+keycount is 0, means EOF.
+</li>
+<li>
+At run-time list of key offsets is maintained for each node so that we 
+can move from one key to the next quickly.
+</li>
+<li>
+We cannot binary search the keys in a node because the keys are stored
+in compressed form, and that prevents us from reading a key at random.
+</li>
+<li>
+We can only move forward when reading keys from a node (again because
+of compression). To move back we have to start from the beginning.
+</li>
+<li>
+The cost of sequential access is offset by the disk savings achieved
+due to compression. Disk IO is far more expensive than memory based
+scanning.
+</li>
+<li>
+The node size is fixed at 8K, and maximum keysize is 254 bytes.
+</li>
+<li>
+The minimum length of an entry is about 5 bytes (4 bytes prologue and
+1 byte of data). The total key space is about 8182 bytes, thus around
+1634 keys can be stored in a single node (at maximum compression).
+</li>
+<li>
+blocknumbers are not file offsets - to get a file offset, you have to
+multiply blocknumber-1 with BLOCKSIZE which is 8K.
+</li>
+</ul>
+<hr>
+
+<p>Copyright &copy; 2000-2002 by <a
+href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a>
+</p>
+</body>
+</html>

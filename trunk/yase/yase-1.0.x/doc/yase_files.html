@@ -1,0 +1,382 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>YASE File Formats</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="">
+<meta name="Keywords" content="">
+</head>
+<body>
+<h1>YASE File Formats</h1>
+
+<p>A YASE database consists of several files.</p>
+
+<table border="1" cellspacing="0" cellpadding="0" width="100%">
+<tr align="left">
+<th>Filename</th>
+<th>Description</th>
+</tr>
+
+<tr align="left">
+<td>yase.docptrs</td>
+<td>The list of YASE documents.</td>
+</tr>
+
+<tr align="left">
+<td>yase.files</td>
+<td>contains details of files indexed by YASE.</td>
+</tr>
+
+<tr align="left">
+<td>yase.docs</td>
+<td>contains details of documents indexed by YASE.</td>
+</tr>
+
+<tr align="left">
+<td>yase.btree</td>
+<td>BTree index for YASE.</td>
+</tr>
+
+<tr align="left">
+<td>yase.postings</td>
+<td>document postings file.</td>
+</tr>
+
+<tr align="left">
+<td>yase.words</td>
+<td>merged intermediate file containing list of terms indexed by YASE.</td>
+</tr>
+
+<tr align="left">
+<td>yase.info</td>
+<td>contains basic information about the YASE database.</td>
+</tr>
+</table>
+
+
+<p>YASE identifies documents by sequential numbers beginning with 0. For each document YASE creates a record in <tt>yase.docptrs</tt>. This contains pointers to other files (<tt>yase.files</tt> or <tt>yase.docs</tt>) and the calculated document weight.</p>
+
+<p>A document can be a complete file, or part of a file. If the document is a file, YASE creates a record in both <tt>yase.docptrs</tt> and <tt>yase.files</tt>, and links them via a pointer in <tt>yase.docptrs</tt>.</p>
+
+<p>If the document is part of a file, then YASE creates records in <tt>yase.docptrs</tt> and <tt>yase.docs</tt> for each part document in the file. Each <tt>yase.docptr</tt> record is provided with a pointer to the corresponding record in <tt>yase.docs</tt>. YASE also creates a record in <tt>yase.files</tt> for the complete file. Each record in <tt>yase.docs</tt> is provided a pointer to the record in <tt>yase.files</tt>.</p>
+
+<p>The following table summarizes this relationship:</p>
+
+<table border="1" cellspacing="0" cellpadding="0" width="100%">
+<tr align="left">
+<th>Type of document</th>
+<th>Records in yase.docptrs</th>
+<th>Records in yase.docs</th>
+<th>Records in yase.files</th>
+</tr>
+
+<tr align="left">
+<td>Single document file</td>
+<td>yes (one)</td>
+<td>no</td>
+<td>yes (one)</td>
+</tr>
+
+<tr align="left">
+<td>Multiple documents file</td>
+<td>yes (multiple)</td>
+<td>yes (multiple)</td>
+<td>yes (one)</td>
+</tr>
+</table>
+
+
+<p>In the following sections, the format of each file is described.</p>
+
+<h2>yase.docptrs</h2>
+
+<ul>
+<li>Each record in this file contains a pointer to a file/document indexed by YASE. For single document files, a pointer to <tt>yase.files</tt> is stored. For multi-document files a pointer to <tt>yase.docs</tt> is stored.</li>
+
+<li>Records are fixed length so a record delimiter is not required.</li>
+
+<li>YASE uses document numbers (starting from 0) to identify documents. Sequential numbers allow better compression. The postion of a record is found by multiplying the document number by the record length.</li>
+</ul>
+
+<table border="1" cellspacing="0" cellpadding="0" width="100%">
+<caption align="left">Structure of a <tt>yase.docptrs</tt> record</caption>
+
+<tr align="left">
+<th>Field</th>
+<th>Length</th>
+<th>Type</th>
+<th>Mandatory</th>
+</tr>
+
+<tr align="left">
+<td>Type <sub>1</sub> </td>
+<td>1</td>
+<td>char</td>
+<td>yes</td>
+</tr>
+
+<tr align="left">
+<td>offset <sub>2</sub> </td>
+<td>4</td>
+<td>long</td>
+<td>yes</td>
+</tr>
+
+<tr align="left">
+<td>weight (dwt)</td>
+<td>4</td>
+<td>float</td>
+<td>yes</td>
+</tr>
+</table>
+
+<sub>1</sub> One of following : 1=file, 2=doc<br>
+<sub>2</sub> If type == 1 offset contains pointer to <tt>yase.files</tt> else pointer to <tt>yase.docs</tt> <br>
+
+
+<h2>yase.files</h2>
+
+<ul>
+<li>Contains details of files indexed by YASE.</li>
+
+<li>A record here is mandatory for any file indexed by YASE.</li>
+
+<li>Records in this file are indirectly accessed via pointers stored in either <tt>yase.docs</tt> or <tt>yase.docptrs</tt>.</li>
+</ul>
+
+<table border="1" cellspacing="0" cellpadding="0" width="100%">
+<caption align="left">Structure of a <tt>yase.files</tt> record</caption>
+
+<tr align="left">
+<th>Field</th>
+<th>Length</th>
+<th>Type</th>
+<th>Delimiter</th>
+<th>Mandatory</th>
+</tr>
+
+<tr align="left">
+<td>filename</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>logicalname</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>yes</td>
+</tr>
+
+<tr align="left">
+<td>title</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>author</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>type</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>size</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>datecreated</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>keywords</td>
+<td>variable</td>
+<td>char</td>
+<td>(none)</td>
+<td>optional</td>
+</tr>
+</table>
+
+<p>Record delimiter is \n.</p>
+
+<h2>yase.docs</h2>
+
+<ul>
+<li>Contains details of documents indexed by YASE. A document is a subset of a file - files may contain one or more documents. Records are created in this file only when files containing multiple documents are indexed.</li>
+
+<li>In each record a pointer to the file in <tt>yase.files</tt> is stored.</li>
+</ul>
+
+<table border="1" cellspacing="0" cellpadding="0" width="100%">
+<caption align="left">Structure of a <tt>yase.docs</tt> record</caption>
+
+<tr align="left">
+<th>Field</th>
+<th>Length</th>
+<th>Type</th>
+<th>Delimiter</th>
+<th>Mandatory</th>
+</tr>
+
+<tr align="left">
+<td>offset <sub>1</sub> </td>
+<td>4</td>
+<td>long</td>
+<td>(none)</td>
+<td>yes</td>
+</tr>
+
+<tr align="left">
+<td>title</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>anchor</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>author</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>type</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>size</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>datecreated</td>
+<td>variable</td>
+<td>char</td>
+<td>^</td>
+<td>optional</td>
+</tr>
+
+<tr align="left">
+<td>keywords</td>
+<td>variable</td>
+<td>char</td>
+<td>(none)</td>
+<td>optional</td>
+</tr>
+</table>
+
+<sub>1</sub> offset points to the file record in <tt>yase.files</tt>. <br>
+ 
+
+<p>Record delimiter is \n.</p>
+
+<h2>yase.postings</h2>
+
+<ul>
+<li>For each term indexed by YASE, a list of document numbers is stored in this file. A document number is a pointer to a record in <tt>yase.docptrs</tt>. For example, document number 0 points to 1st record in <tt>yase.docptrs</tt>, document number 1 points to 2nd record, and so on.</li>
+
+<li>Actually, instead of storing document numbers, gaps between numbers are stored. This allows better compression.</li>
+
+<li>The document term frequency is stored with each document reference.</li>
+
+<li>The overall term frequency is also stored.</li>
+
+<li>Records in this file are accessed via pointers stored in <tt>yase.btree</tt>.</li>
+
+<li>Records are variable length, hoewever there is no record delimiter.</li>
+</ul>
+
+<table border="1" cellspacing="0" cellpadding="0" width="100%">
+<caption align="left">Structure of a <tt>yase.postings</tt> record</caption>
+
+<tr align="left">
+<th>Field</th>
+<th>Length</th>
+<th>Type</th>
+<th>Mandatory</th>
+</tr>
+
+<tr align="left">
+<td>doccnt (TF)</td>
+<td>variable</td>
+<td>bitmap</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td colspan="4"><i>Followed by &lt;doccnt&gt; instances of:</i> </td>
+</tr>
+
+<tr>
+<td>gap</td>
+<td>variable</td>
+<td>bitmap</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td>freq (DTF)</td>
+<td>variable</td>
+<td>bitmap</td>
+<td>yes</td>
+</tr>
+</table>
+
+
+<h2>yase.btree</h2>
+
+<p>See <a href="yase_btree.html">BTree</a> for more information.</p>
+
+<h2>yase.info</h2>
+
+<p>Contains some statistics related to YASE database. Also a flag to indicate whether the database contains stemmed terms or not.</p>
+
+<hr>
+Copyright &copy; 2000-2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a>
+</body>
+</html>
+
