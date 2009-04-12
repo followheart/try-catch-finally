@@ -1,0 +1,139 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:567: checking host system type
+configure:652: checking whether make sets ${MAKE}
+configure:690: checking for a BSD compatible install
+configure:747: checking for gcc
+configure:824: checking whether the C compiler (gcc  ) works
+configure:838: gcc -o conftest    conftest.c  1>&5
+configure:858: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:863: checking whether we are using GNU C
+configure:887: checking whether gcc accepts -g
+configure:928: checking how to run the C preprocessor
+configure:989: checking for AIX
+configure:1021: checking for gcc option to accept ANSI C
+configure:1077: checking for function prototypes
+configure:1237: checking for working const
+configure:1291: gcc -c  -O2 -Wall -Wno-implicit  conftest.c 1>&5
+configure: In function `main':
+configure:1265: warning: unused variable `s'
+configure:1285: warning: unused variable `foo'
+configure:1253: warning: unused variable `zero'
+configure:1247: warning: unused variable `x'
+configure:1264: warning: `t' might be used uninitialized in this function
+configure:1282: warning: `b' might be used uninitialized in this function
+configure:1312: checking for size_t
+configure:1345: checking for pid_t
+configure:1378: checking whether byte ordering is bigendian
+configure:1396: gcc -c  -O2 -Wall -Wno-implicit  conftest.c 1>&5
+configure:1411: gcc -c  -O2 -Wall -Wno-implicit  conftest.c 1>&5
+configure: In function `main':
+configure:1406: `not' undeclared (first use in this function)
+configure:1406: (Each undeclared identifier is reported only once
+configure:1406: for each function it appears in.)
+configure:1406: parse error before `big'
+configure: failed program was:
+#line 1400 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/param.h>
+int main() {
+
+#if BYTE_ORDER != BIG_ENDIAN
+ not big endian
+#endif
+; return 0; }
+configure:1472: checking for string.h
+configure:1482: cc -E  conftest.c >/dev/null 2>conftest.out
+configure:1472: checking for stdarg.h
+configure:1472: checking for unistd.h
+configure:1472: checking for sys/time.h
+configure:1472: checking for utime.h
+configure:1482: cc -E  conftest.c >/dev/null 2>conftest.out
+configure:1472: checking for sys/utime.h
+configure:1482: cc -E  conftest.c >/dev/null 2>conftest.out
+configure:1478: sys/utime.h: No such file or directory
+configure: failed program was:
+#line 1477 "configure"
+#include "confdefs.h"
+#include <sys/utime.h>
+configure:1512: checking for sys/select.h
+configure:1512: checking for sys/utsname.h
+configure:1522: cc -E  conftest.c >/dev/null 2>conftest.out
+configure:1512: checking for pwd.h
+configure:1522: cc -E  conftest.c >/dev/null 2>conftest.out
+configure:1512: checking for signal.h
+configure:1549: checking whether time.h and sys/time.h may both be included
+configure:1563: gcc -c  -O2 -Wall -Wno-implicit  conftest.c 1>&5
+configure: In function `main':
+configure:1559: warning: unused variable `tp'
+configure:1585: checking return type of signal handlers
+configure:1607: gcc -c  -O2 -Wall -Wno-implicit  conftest.c 1>&5
+configure: In function `main':
+configure:1603: warning: unused variable `i'
+configure:1627: checking for struct utimbuf
+configure:1655: checking for working alloca.h
+configure:1667: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure: In function `main':
+configure:1663: warning: unused variable `p'
+configure:1688: checking for alloca
+configure:1716: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure: In function `main':
+configure:1712: warning: unused variable `p'
+configure:1884: checking for strdup
+configure:1884: checking for strstr
+configure:1912: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:1884: checking for strcasecmp
+configure:1912: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:1884: checking for strncasecmp
+configure:1912: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:1939: checking for gettimeofday
+configure:1967: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:1939: checking for mktime
+configure:1967: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:1939: checking for strptime
+configure:1967: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:1994: checking for strerror
+configure:1994: checking for vsnprintf
+configure:1994: checking for select
+configure:2022: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:1994: checking for signal
+configure:1994: checking for symlink
+configure:2022: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:1994: checking for access
+configure:2022: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:1994: checking for isatty
+configure:2022: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:2049: checking for uname
+configure:2077: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:2049: checking for gethostname
+configure:2077: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:2105: checking for gethostbyname
+configure:2133: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:2208: checking for socket in -lsocket
+configure:2227: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c -lsocket   1>&5
+/usr/i486-suse-linux/bin/ld: cannot find -lsocket
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 2216 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char socket();
+
+int main() {
+socket()
+; return 0; }
+configure:2352: checking whether NLS is requested
+configure:2369: checking for msgfmt
+configure:2403: checking for xgettext
+configure:2438: checking for gmsgfmt
+configure:2484: checking for locale.h
+configure:2494: cc -E  conftest.c >/dev/null 2>conftest.out
+configure:2484: checking for libintl.h
+configure:2494: cc -E  conftest.c >/dev/null 2>conftest.out
+configure:2524: checking for gettext
+configure:2552: gcc -o conftest  -O2 -Wall -Wno-implicit   conftest.c  1>&5
+configure:2661: checking for makeinfo

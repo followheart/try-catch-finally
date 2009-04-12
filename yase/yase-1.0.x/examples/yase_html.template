@@ -1,0 +1,54 @@
+##ys_header##
+<head>
+  <title>YASE - Query Results</title>
+  <link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+  <link rel="stylesheet" type="text/css" href="yase.css">
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+  <meta name="author" content="Dibyendu Majumdar">
+  <meta name="description" content="YASE Sample Search Page">
+  <meta name="keywords" content="YASE Search Engine Information Retrieval Boolean Ranked Queries">
+</head>
+
+<body>
+
+<h1>YASE - Query Results</h1>
+<hr width="100%">
+##ys_footer##
+<hr width="100%">
+Powered by <a href="http://www.mazumdar.demon.co.uk/yase_index.html">YASE</a> - Copyright (c) 2000,2001,2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a>
+</body>
+##ys_rowheader##
+<table border="1" width="100%" CELLSPACING="0" CELLPADDING="0">
+    <tr ALIGN="left" VALIGN="bottom">
+        <th>Title</th>
+        <th>Rank</th>
+        <th>Size</th>
+        <th>Hits</th>
+    </tr>
+##ys_row##
+    <tr ALIGN="left" VALIGN="bottom">
+        <td valign="bottom" nowrap><a href="%l">%t<a></td>
+        <td>%r</td>
+        <td>%s</td>
+	<td>%h</td>
+    </tr>
+##ys_rowfooter##
+</table>
+##ys_firstenabled##
+<a href="%l">First Page</a>
+##ys_firstdisabled##
+First Page
+##ys_nextenabled##
+<a href="%l">Next Page</a>
+##ys_nextdisabled##
+Next Page
+##ys_prevenabled##
+<a href="%l">Prev Page</a>
+##ys_prevdisabled##
+Prev Page
+##ys_lastenabled##
+<a href="%l">Last Page</a>
+##ys_lastdisabled##
+Last Page
+##ys_newquery##
+<a href="%l">New Query</a>

@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <title>YASE - Yet Another Search Engine</title>
+  <link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+  <meta name="author" content="Dibyendu Majumdar">
+  <meta name="description" content="YASE Sample Search Page">
+  <meta name="keywords" content="YASE Search Engine Information Retrieval Boolean Ranked Queries">
+</head>
+
+<body>
+
+<h1>YASE - Yet Another Search Engine</h1>
+
+<form method="GET" action="/cgi-bin/yasequery">
+  <input type="hidden" name="collection_path" value="sample">
+  <input type="hidden" name="curpage" value="1">
+  <input type="hidden" name="dump_env" value="n">
+
+  Search (enter one or more words):
+  <input type="text" name="query" size="60" maxlength="200"><br>
+  <select name="searchmethod">
+    <option value="ranked">Ranked
+    <option value="all">All
+    <option value="boolean">Boolean
+  </select><br>
+  <input type="text" name="pagesize" size="2" maxlength="2" value="10"> Show items per page<br>
+  <p>
+  <input type="submit">
+</form>
+
+<hr>
+Powered by <a href="http://www.mazumdar.demon.co.uk/yase_index.html">YASE</a> - Copyright (c) 2000,2001,2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>YASE Commands Reference</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="YASE Command Reference Manual">
+<meta name="Keywords" content="YASE Commands Reference yasequery yasemakedb">
+</head>
+<body>
+<h1>YASE Commands Reference</h1>
+
+<h2><tt><A NAME="yasemakedb">yasemakedb</A></tt></h2>
+
+<p>This command is used to create a YASE database.</p>
+
+<p>The command line syntax is:<br>
+
+<div class="syntax">
+<pre class="syntax">
+Usage: yasemakedb [OPTIONS]... [DIRECTORY/URL]...
+YASE makedb options =&gt;
+  -h, --help                   display this help message 
+                               and exit.
+  -V, --version                display version of YASE 
+                               and exit.
+  -H, --yase-home=PATH         YASE home directory.
+  -s, --enable-stemming        extract the stem of a 
+                               word before indexing.
+  -m, --max-memory=N           use upto N megabytes of 
+                               memory (not very reliable).
+  -r, --root-directory=DIR     store document paths 
+                               relative to DIR.
+  -w, --show-wget-options-available  display supported 
+                               wget options and exit.
+  -W, --show-wget-options      display wget options being 
+                               used and exit.
+</pre>
+</div>
+</p>
+
+<p>If <tt>-H</tt> or <tt>--yase-home</tt> option is not supplied, then YASE 
+home directory is taken to be '.', ie, current directory.</p>
+
+<p>The default value for <tt>-m</tt> or <tt>--max-memory</tt> option 
+is 5 (mb).</p>
+
+<p>By default, <tt>yasemakedb</tt> does not use stemming.<p>
+
+<p>If either of <tt>-h</tt>, <tt>-V</tt>, <tt>-w</tt>, <tt>-W</tt> options 
+(or their longer counterparts) are used, then <tt>yasemakedb</tt> does not 
+actually build the database.</p>
+
+<p>The <tt>-r</tt> option is used to force YASE to store relative pathnames.
+For example, if a full pathname to a file is 
+<tt>/home/dibyendu/yase/doc/yase_index.html</tt>, and <tt>-r</tt> is set to
+<tt>/home/dibyendu</tt>, then YASE will actually store 
+<tt>/yase/doc/yase_index.html</tt> as
+the file name. This feature is useful when indexing files on a local file-system that will be accessed from a Web Site.
+</p>
+
+<p>The following <tt>wget</tt> options are available:<br>
+
+<div class="syntax">
+<pre class="syntax">
+Logging and input file:
+  --wget-output-file=FILE     log messages to FILE.
+  --wget-append-output=FILE   append messages to FILE.
+  --wget-verbose              be verbose.
+  --wget-non-verbose          turn off verboseness, without 
+                              being quiet.
+  --wget-force-html           treat input file as HTML.
+
+Download:
+  --wget-tries=NUMBER         set number of retries to NUMBER
+                              (0 unlimits).
+  --wget-no-clobber           don't clobber existing files.
+  --wget-continue             restart getting an existing 
+                              file.
+  --wget-dot-style=STYLE      set retrieval display style.
+  --wget-timestamping         don't retrieve files if older 
+                              than local.
+  --wget-server-response      print server response.
+  --wget-timeout=SECONDS      set the read timeout to SECONDS.
+  --wget-wait=SECONDS         wait SECONDS between retrievals.
+  --wget-proxy=on/off         turn proxy on or off.
+  --wget-quota=NUMBER         set retrieval quota to NUMBER.
+
+Directories:
+  --wget-directory-prefix=PREFIX   
+                              save files to PREFIX/...
+  --wget-cut-dirs=NUMBER           
+                              ignore NUMBER remote directory 
+                              components.
+
+HTTP options:
+  --wget-http-user=USER      set http user to USER.
+  --wget-http-passwd=PASS    set http password to PASS.
+  --wget-cache=on/off        (dis)allow server-cached data 
+                             (normally allowed).
+  --wget-ignore-length       ignore `Content-Length' header 
+                             field.
+  --wget-header=STRING       insert STRING among the headers.
+  --wget-proxy-user=USER     set USER as proxy username.
+  --wget-proxy-passwd=PASS   set PASS as proxy password.
+  --wget-save-headers        save the HTTP headers to file.
+  --wget-user-agent=AGENT    identify as AGENT instead of 
+                             Wget/VERSION.
+
+FTP options:
+  --wget-retr-symlinks   retrieve FTP symbolic links.
+  --wget-glob=on/off     turn file name globbing on or off.
+  --wget-passive-ftp     use the "passive" transfer mode.
+
+Recursive retrieval:
+  --wget-recursive             recursive web-suck -- use with 
+                               care!.
+  --wget-level=NUMBER          maximum recursion depth (0 to 
+                               unlimit).
+  --wget-dont-delete-after     don't delete downloaded files.
+  --wget-convert-links         convert non-relative links to 
+                               relative.
+  --wget-dont-remove-listing   don't remove `.listing' files.
+
+Recursive accept/reject:
+  --wget-accept=LIST               list of accepted extensions.
+  --wget-reject=LIST               list of rejected extensions.
+  --wget-domains=LIST              list of accepted domains.
+  --wget-exclude-domains=LIST      comma-separated list of 
+                                   rejected domains.
+  --wget-relative                  follow relative links only.
+  --wget-follow-ftp                follow FTP links from 
+                                   HTML documents.
+  --wget-span-hosts                go to foreign hosts when 
+                                   recursive.
+  --wget-include-directories=LIST  list of allowed directories.
+  --wget-exclude-directories=LIST  list of excluded directories.
+  --wget-no-host-lookup            don't DNS-lookup hosts.
+  --wget-no-parent                 don't ascend to the parent 
+                                   directory.
+</pre>
+</div>
+</p>
+
+<p>The default options used by <tt>yasemakedb</tt> are:<br>
+<div class="tty">
+<pre class="tty">
+  --wget-accept=&quot;html,htm&quot;
+  --wget-directory-prefix=&quot;/tmp&quot;
+  --wget-wait=1
+</pre>
+</div>
+</p>
+
+<p>
+<strong>NOTE:</strong>The <tt>--wget-wait</tt> option is recommended when downloading
+from web sites. By default, this option is used with a value of 1 (second),
+which means <tt>yasemakedb</tt> will wait for a second between retrievals. 
+This does have a performance impact - it will take at least 10000 seconds 
+to retrieve 10000 files.
+</p>
+
+<p>
+<strong>WARNING:</strong>I have not tested all the <tt>wget</tt> options 
+with YASE.
+</p>
+
+
+<h2><tt><A NAME="yasequery">yasequery</A></tt></h2>
+
+<p>The <tt>yasequery</tt> command can be used either as a <tt>CGI</tt> script, 
+or as a command line utility. When used as a <tt>CGI</tt> script, it must be i
+invoked via HTTP GET command.</p>
+
+<p>The <tt>yasequery</tt> command does not accept any command line parameters. 
+Depending on how it is invoked, it looks for parameters in one of two ways.</p>
+
+<p>If invoked on the command line, it reads <tt>stdin</tt> and treats any line 
+beginning with ':' as a parameter. Any other input is treated as a list of 
+terms to search for.</p>
+
+<p>When invoked via CGI, the parameters must be passed via the HTTP GET 
+method.</p>
+
+<p>The following table lists the parameters recognised by 
+<tt>yasequery</tt>.</p>
+
+<table border="1">
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Value</th>
+<th>Default</th>
+<th>Availability</th>
+</tr>
+
+<tr>
+<td>collection_path<br> or yp</td>
+<td>path to the YASE database (must be relative to DocumentRoot)</td>
+<td>pathname</td>
+<td>./</td>
+<td>Both</td>
+</tr>
+
+<tr>
+<td>query<br> or q</td>
+<td>terms to be searched</td>
+<td>list of words or a <A HREF="#boolexpr">boolean expression</A></td>
+<td>None</td>
+<td>CGI</td>
+</tr>
+
+<tr>
+<td>searchmethod<br> or sm</td>
+<td>how to match documents to the query</td>
+<td>all, ranked, boolean</td>
+<td>ranked</td>
+<td>Both</td>
+</tr>
+
+<tr>
+<td>pagesize<br> or ps</td>
+<td>number of items to be displayed on each page</td>
+<td>number</td>
+<td>5</td>
+<td>Both</td>
+</tr>
+
+<tr>
+<td>curpage<br> or cp</td>
+<td>page to be displayed</td>
+<td>number</td>
+<td>1</td>
+<td>Both</td>
+</tr>
+
+<tr>
+<td>dump_env<br> or de</td>
+<td>debug option - causes environment variables to be displayed</td>
+<td>y or n</td>
+<td>n</td>
+<td>Both</td>
+</tr>
+</table>
+
+<h3><A NAME="boolexpr">Boolean expression syntax</A></h3>
+
+<p>
+The syntax for boolean expression is as follows:
+
+<div class="syntax">
+<pre class="grammar">
+expression:
+	or-expression
+
+or-expression:
+	and_expression
+	and_expression <em>or</em> and_expression
+
+and-expression:
+	not_expression
+	not_expression <em>and</em> not_expression
+
+not-expression:
+	<em>not</em> not-expression
+	primary-expression
+
+primary_expression:
+	<em>(</em> expression <em>)</em>
+	term
+
+term:
+	char-sequence
+
+char-sequence:
+	char
+	char-sequence char
+
+char:
+	one of 
+	<em>a b c d e f g h i j k l m n o p q r s t u v w x y z
+	A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+	0 1 2 3 4 5 6 7 8 9</em>
+
+</pre>
+</div>
+	
+<p>
+An example of a boolean expression:
+</p>
+
+<pre class="text">
+alice and queen and of and hearts and rabbit and not(soldiers or gardeners)
+</pre>
+
+<p>
+Above query can be paraphrased as <i>all documents that
+contain the words 'alice', 'queen', 'of', 'hearts', and 'rabbit' but do not 
+contain the words 'soldiers' or 'gardeners'</i>.
+</p>
+
+<hr>
+<p>Copyright &copy; 2000-2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a></p>
+</body>
+</html>
+

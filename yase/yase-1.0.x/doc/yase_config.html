@@ -1,0 +1,530 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>YASE Configuration and Usage</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="YASE Configuration Page">
+<meta name="Keywords" content="YASE Configuration Guide">
+</head>
+<body>
+<h1>Configuring and using YASE</h1>
+
+<h2>Overview</h2>
+
+<p>To index document collections, follow these steps:</p>
+
+<p>Decide which document collections you would like to index. A document collection is either a directory structure containing documents or a web site. A document is any text file or any file from which text can be extracted by a suitable filter.</p>
+
+<p>If you are indexing documents in a local file-system, you should ensure that all your document collections are rooted at a common mount point. This allows YASE to refer to your documents relative to this mount point - rather than by using absolute paths. This is particularly important if you are indexing your document collection for your Web Server. You can use symbolic links to achieve this as described later in this document.</p>
+
+<p>By default YASE can only read ordinary text or html files. This means it can index program source files, man pages, html pages, text files, etc.. If your document collection contains files in non-text format (for example, Microsoft Word documents or PDF documents), then you need to define filters for such document types. A filter is a program that converts a document to text, html, or xml. Following filters have been used by the author of YASE:</p>
+
+<table border="1">
+<tr>
+<th>Filter</th>
+<th>Converts</th>
+</tr>
+
+<tr>
+<td><a href="http://www.ice.ru/~vitus/catdoc/">catdoc</a></td>
+<td>Microsoft Word documents</td>
+</tr>
+
+<tr>
+<td><a href="http://www.foolabs.com/xpdf/">Xpdf</a></td>
+<td>Adobe Acrobat PDF documents</td>
+</tr>
+</table>
+
+<p>Finally you need to identify a directory where you want YASE to store its database files. If <tt>yasequery</tt> is to be used as a cgi script then this directory must be accessible from the Web Server's DocumentRoot.</p>
+
+<h2>Defining filters for YASE</h2>
+
+<h3>The <tt>yase.config</tt> file</h3>
+
+<p>Filters are specified in the <tt>yase.config</tt> file. YASE identifies a document type by its file extension. The file extension is the part of the file name following a period. A file extension may itself contain sub-extensions separated by periods.</p>
+
+<p>Example:<br>
+<tt>word.doc</tt> - Here 'doc' is the extension.<br>
+<tt>word.doc.gz</tt> - Here 'doc.gz' is the extension.</p>
+
+<p>A filter can be specified for each file extension. In the example above, you can specify a filter for files with 'doc' extension, and another filter for files with 'doc.gz' extension. It is however not very efficient to have to specify filters for each extension type since some extensions are subsets of other extensions (such as 'doc' is a subset of 'doc.gz'). Ideally we would like to define a filter for each 'document type' and let YASE use multiple filters to process files that contain more than one document type. For example, if we specified a filter for 'doc' files, and another for 'gz' files, YASE could theoretically be intelligent enough to figure out that the file <tt>word.doc.gz</tt> can be processed by applying the filter for 'gz' and piping the output to the filter for 'doc' files. I have added support for this kind of filtering - it is not perfect but works Okay for a start. The way I implemented this is described below:</p>
+
+<p>For each document type you need to add a line as follows:</p>
+
+<p><em>{ext}</em><tt>.filter=</tt><em>{type}</em><tt>;</tt><em>{command}</em></p>
+
+<p>where, 
+<br><em>{ext}</em> is the file extension of the particular type of document. and, 
+<br><em>{command}</em> is the program to run to convert this type. <br><em>{type}</em> can be one of 'xml', 'html', 'text' or 'pipe'.The 'pipe' type is special in that it is used to chain commands using the UNIX pipe facility. The 'xml' type is also special - more about this in a moment.</p>
+
+<p>When YASE encounters a file, it starts by looking for a filter for the complete file extension. If one is found, it can use it directly provided that the output from that filter is 'text', 'html', or 'xml'. If the type is 'pipe', YASE can still use it but will assume that the output is 'text'. In the current version, YASE will use the first match that it finds.</p>
+
+<p>If YASE cannot find a match for the complete file extension, it checks whether the extension is made up of sub-extensions. Each token delimited by the dot '.' is considered to be a sub-extension. YASE assumes that each sub-extension denotes a document type. It looks at each sub-extension, starting from the rightmost one, and searches for an appropriate filter.</p>
+
+<p>In the example <tt>word.doc.gz</tt>, YASE first looks for a filter that matches the complete extension 'doc.gz'. If no such filter is found, then YASE looks for a filter for the rightmost sub-extension, i.e., 'gz'. If a filter is found for 'gz', YASE can use it provided it is of type 'pipe' because it needs to be able to pipe the output from this filter to the next filter. It is an error currently if any filter other than the one for the leftmost sub-extension is of type 'text', 'html' or 'xml'. Having found the filter for 'gz', YASE proceeds to the next sub-extension 'doc'. Since this is the leftmost sub-extension, YASE expects to find a filter that outputs 'text', 'html' or 'xml'. It can also use a filter of type 'pipe' but assumes that the output from such a filter is 'text'. It is an error if no filter is found for any one of the sub-extensions.</p>
+
+<p>If YASE is unable to find a suitable filter for an input file, it treats the input file as text and tries to extract words out of it. However, if it encounters more than 20 non-text characters, it abandons reading the file, and assumes that the file is binary.</p>
+
+<h3>Requirements for a filter</h3>
+
+<p>Currently, YASE requires that a filter should take input either from <tt>stdin</tt> (if no command line argument is specified), or by reading a file specified as an argument on the command line. It needs this flexibility because of the need to pipe output from one filter as input to another.</p>
+
+<p>YASE also requires that a filter send its output to <tt>stdout</tt>.</p>
+
+<p>The tool <tt>pdftotext</tt>, which is part of the <tt>Xpdf</tt> package, is a filter that requires an input file as the parameter, and produces an output file. YASE cannot directly use such a filter, but a simple Perl or Bash wrapper script can be used to modify the behaviour of this tool to that expected by YASE. See <tt>sample/pdf2text.sh</tt> as an example of how this can be done.</p>
+
+<h3>Examples</h3>
+
+<p>To illustrate how a filter is specified and interpreted, I show some examples below:</p>
+
+<div class="filecontent">
+<pre class="text">
+# YASE configuration file
+doc.filter=text;/home/dibyendu/catdoc/bin/catdoc
+gz.filter=pipe;gunzip -c
+</pre>
+</div>
+
+<table border="1">
+<tr>
+<th>Input file</th>
+<th>YASE will execute</th>
+</tr>
+
+<tr>
+<td>word.doc</td>
+<td>/home/dibyendu/catdoc/bin/catdoc word.doc</td>
+</tr>
+
+<tr>
+<td>word.doc.gz</td>
+<td>gunzip -c word.doc.gz|/home/dibyendu/catdoc/bin/catdoc</td>
+</tr>
+
+<tr>
+<td>readme.gz</td>
+<td>gunzip -c readme.gz</td>
+</tr>
+</table>
+
+<h3>A filter's environment</h3>
+
+<p>Note that when a filter is executed, the following environment variables are made available:</p>
+
+<table border="1">
+<tr>
+<th>Variable</th>
+<th>Value</th>
+</tr>
+
+<tr>
+<td>YASE_FILENAME</td>
+<td>the pathname of the file being processed</td>
+</tr>
+
+<tr>
+<td>YASE_LOGICALNAME</td>
+<td>the logical name of the file being processed</td>
+</tr>
+
+<tr>
+<td>YASE_TITLE</td>
+<td>the filename without the path</td>
+</tr>
+
+<tr>
+<td>YASE_SIZE</td>
+<td>the size of the file in bytes</td>
+</tr>
+
+<tr>
+<td>YASE_DATECREATED</td>
+<td>the file creation date/time</td>
+</tr>
+</table>
+
+<h3>Filters that generate xml</h3>
+
+<p>YASE can display query results better if it can determine a title for each document. It can even display other information such as the author name. Another possibility is when a file contains multiple documents, or when a document is very large, and you would like it to be treated as consisting of several smaller sub-documents.</p>
+
+<p>YASE does not understand the structure of any document other than HTML. It can look for the &lt;title&gt; tag in HTML documents; this includes output generated by 'html' filters. For documents that YASE does not understand, it treats the content as a collection of words to be indexed. It cannot determine titles for such documents. To allow YASE to process unknown document types in a more intelligent way, I have added support for filters that generate output in a specific XML format. The DTD for this format is given below:</p>
+
+<div class="filecontent">
+<pre class="text">
+&lt;!ELEMENT YASEFILE (YASEDOC+)&gt; 
+&lt;!ELEMENT YASEDOC (#PCDATA)&gt;
+&lt;!ATTLIST YASEFILE
+    filename CDATA #REQUIRED
+    logicalname CDATA #REQUIRED
+    title CDATA #IMPLIED
+    author CDATA #IMPLIED
+    datecreated CDATA #IMPLIED
+    type CDATA #IMPLIED
+    size CDATA #IMPLIED
+    keywords CDATA #IMPLIED&gt;
+&lt;!ATTLIST YASEDOC
+    title CDATA #REQUIRED
+    anchor CDATA #IMPLIED
+    author CDATA #IMPLIED
+    datecreated CDATA #IMPLIED
+    type CDATA #IMPLIED
+    size CDATA #IMPLIED
+    keywords CDATA #IMPLIED&gt;
+</pre>
+</div>
+
+<p>As you can see the format allows for multiple documents in a single file. Each document can have its own title, author and other details. The tag YASEFILE describes the file's attributes such as file name, title, author, etc.. Multiple YASEDOC elements can occur within a single YASEFILE element - each YASEDOC element represents a logical document. To specify a filter that generates output in this format, you can use the 'xml' type.</p>
+
+<p>Example:</p>
+
+<div class="filecontent">
+<pre>
+# YASE configuration file
+doc.filter=xml;/usr/local/bin/doc2xml
+</pre>
+</div>
+
+<p>See <tt>sample/txt2xml.sh</tt> for an example of a filter that generates xml. This is a custom filter designed to process the sample file <tt>alice.txt.gz</tt>.</p>
+
+<p>See <tt><a href="alice.xml">examples/alice.xml</a></tt> for an example of a file generated using the <tt>txt2xml.sh</tt> filter (the file was manually amended afterwards).</p>
+
+<p>IMPORTANT: YASE is capable of treating a file as a collection of documents - but this facility is only available via xml filters.</p>
+
+<h2>Building the YASE database</h2>
+
+<ul>
+<li>Create the <tt>yase.config</tt> file in the YASE home directory. Example: 
+
+<div class="filecontent">
+<pre class="text">
+# YASE configuration file
+doc.filter=text;catdoc
+pdf.filter=text;pdf2text.sh
+gz.filter=pipe;gunzip -c
+</pre>
+</div>
+
+<p>NB: It is not mandatory to create the <tt>yase.config</tt> file.</p>
+</li>
+
+<li>If you are indexing a directory structure, run <tt><a href="yase_commands.html#yasemakedb">yasemakedb</a></tt> using the following syntax: 
+
+<div class="syntax">
+<pre class="syntax">
+yasemakedb -h &lt;dbpath&gt; -r &lt;docroot&gt; \
+       -m &lt;limit&gt; -s &lt;directories ...&gt;
+</pre>
+</div>
+
+<p>where,<br>
+ <em>&lt;dbpath&gt;</em> is the path to the directory where you want YASE files to be created. This is the YASE home directory.<br>
+ <em>&lt;docroot&gt;</em> is the root directory for the entire document collection - i.e, all documents can be accessed by the equivalent of: cd <em>&lt;docroot&gt;</em> ls <em>&lt;relative_path&gt;</em>.<br>
+ <em>&lt;memlimit&gt;</em> is the maximum amount of memory to use (in megabytes).<br>
+ -s option is to enable stemming of words.</p>
+
+<p>Alternatively, if you are indexing a web site, then execute:</p>
+
+<div class="syntax">
+<pre class="syntax">
+yasemakedb -h &lt;dbpath&gt; -m &lt;limit&gt; -s &lt;web site&gt;
+</pre>
+</div>
+</li>
+</ul>
+
+<h3>Example of indexing a directory structure</h3>
+
+<p>Let us assume that we are indexing documents located at <tt>/home/dibyendu/docs</tt> and <tt>/home/dibyendu/src</tt>. We want to refer to each document relative to <tt>/home/dibyendu</tt> - which is our document root. Further, we want to store the YASE database files at <tt>/home/dibyendu/yase</tt>. The following command would give us the desired result:</p>
+
+<div class="tty">
+<pre class="tty">
+yasemakedb -h /home/dibyendu/yase \
+       -r /home/dibyendu \
+       /home/dibyendu/docs \
+       /home/dibyendu/src 
+</pre>
+</div>
+
+<p>NB: The backslash indicates line continuation and is not actually part of the command.</p>
+
+<h3>Creating a database for Web access</h3>
+
+<p>There are two ways you can create a YASE index for a web site. If you web site already contains links to all documents, and you merely want to enable a search facility, you should index your web site directly. This is possible by executing <tt>yasemakedb</tt> with the URL for your web site. YASE will retrieve all HTML documents from your web site into a temporary directory below <tt>/tmp</tt> - it will delete the downloaded files after indexing them. <b>WARNING:</b> You may have to manually cleanup some directory structures below <tt>/tmp</tt> because YASE does not currently get rid of directories created during this process.</p>
+
+<p>On the other hand, if your web site does not contain links to your documents, and you would like to build a searchable database, then you must first ensure that all document collections can be accessed from your web server's <tt>DocumentRoot</tt> directory. The usual way to achieve this is to establish symbolic links to the real directories. Example: My web server's <tt>DocumentRoot</tt> is set to <tt>/usr/local/http/htdocs</tt>. My documents are in <tt>/home/dibyendu/docs</tt>, and <tt>/home/dibyendu/src</tt>. To index my documents and allow a browser to search my documents, I would have to setup the following:</p>
+
+<table border="1">
+<tr>
+<th>Link</th>
+<th>Target</th>
+</tr>
+
+<tr>
+<td>/usr/local/httpd/htdocs/docs</td>
+<td>/home/dibyendu/docs</td>
+</tr>
+
+<tr>
+<td>/usr/local/httpd/htdocs/src</td>
+<td>/home/dibyendu/src</td>
+</tr>
+
+<tr>
+<td>/usr/local/httpd/htdocs/yase</td>
+<td>/home/dibyendu/yase</td>
+</tr>
+</table>
+
+<p>I would then invoke <tt>yasemakedb</tt> as follows:</p>
+
+<div class="tty">
+<pre class="tty">
+yasemakedb -h /usr/local/httpd/htdocs/yase \
+       -r /usr/local/httpd/htdocs \
+       /usr/local/httpd/htdocs/docs \
+       /usr/local/httpd/htdocs/src 
+</pre>
+</div>
+
+<p>NB: The backslash indicates line continuation and is not actually part of the command.</p>
+
+<p>NB: The root directory is specified so that YASE refers to documents relative to <tt>/usr/local/httpd/htdocs</tt>.</p>
+
+<p>NB. You need to setup <tt>yasequery</tt> as described below to enable web access.</p>
+
+<h2>Setup the <tt><a href="yase_commands.html#yasequery">yasequery</a></tt> tool</h2>
+
+<h3>From a Browser</h3>
+
+<p>The <tt>yasequery</tt> tool can be run as a CGI program. The following fields must be supplied when the CGI is invoked:</p>
+
+<table border="1">
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Value</th>
+</tr>
+
+<tr>
+<td>collection_path<br> or yp</td>
+<td>path to the YASE database (must be relative to DocumentRoot)</td>
+<td>pathname</td>
+</tr>
+
+<tr>
+<td>query<br> or q</td>
+<td>terms to be searched</td>
+<td>list of words or a <a href="yase_commands.html#boolexpr">boolean expression</a></td>
+</tr>
+
+<tr>
+<td>searchmethod<br> or sm</td>
+<td>how to match documents to the query</td>
+<td>all, ranked, boolean<br>
+(default ranked)</td>
+</tr>
+
+<tr>
+<td>pagesize<br> or ps</td>
+<td>number of items to be displayed on each page</td>
+<td>number<br>
+(default 5)</td>
+</tr>
+
+<tr>
+<td>curpage<br> or cp</td>
+<td>page to be displayed</td>
+<td>number<br>
+(default 1)</td>
+</tr>
+
+<tr>
+<td>dump_env<br> or de</td>
+<td>debug option - causes environment variables to be displayed</td>
+<td>y or n<br>
+(default n)</td>
+</tr>
+</table>
+
+<p>The GET method is supported. An example HTML page is <tt><a href="yase_search.html">examples/yase_search.html<a></tt></p>
+
+<p>In order to setup web access to a YASE database, first build the database as described in the previous section. Then copy the <tt>yasequery</tt> tool to the <tt>cgi-bin</tt> directory of your web server. Also copy the <tt>yase_search.html</tt> page to your server's <tt>DocumentRoot</tt> directory. You will need to customise this page. <tt>collection_path</tt> should be set to the path to the YASE database files relative to DocumentRoot. In the example shown in the previous section this would be <tt>yase</tt>. You can copy the <tt>yase_html.template</tt> file to the location where YASE database files are located.</p>
+
+<p><b>IMPORTANT:</b>For security reasons YASE always prepends the DocumentRoot directory to any path you specify for location of files. Thus if DocumentRoot is <tt>/usr/local/httpd/htdocs</tt> and you specify a path like <tt>yase/database</tt>, YASE will look for the database files in <tt>/usr/local/httpd/htdocs/yase/database</tt>. YASE also looks for <tt>yase.config</tt> and <tt>yase_html.template</tt> files in the directory that contains the database files.</p>
+
+<h3>On the command line</h3>
+
+<p>You can execute queries on the command line. Input is taken from <tt>stdin</tt>. An input line can contain query terms, or an option. Options are specified by starting the line with a colon (:). All options described in the previous section can be specified in this way. Example:</p>
+
+<div class="tty">
+<pre class="tty">
+:yp=./ 
+:sm=boolean 
+hello and world
+</pre>
+</div>
+
+<p>If above is fed to <tt>yasequery</tt> (you must remove leading spaces from each line) the effect would be to search the YASE database located in the current directory for documents containing the words 'hello' and 'world'. Both words would have to be present in the document for it to be selected.</p>
+
+<p>Note that when using <tt>yasequery</tt> on the command line, the <tt>yp</tt> or <tt>collection_path</tt> argument should point to the full path of directory cobtaining YASE database files.</p>
+
+<h2>Customising YASE output</h2>
+<p>
+Starting with version 1.0.0, YASE allows you to specify a template html file that it can use to generate the html page containing query results. The template file is called <tt>yase_html.template</tt>, and should contain the following sections. Each section must start with a section name on a line of its own. The valid section names are given below. The default template file is shown <a href="yase_sampletemplate.html">here</a>.</p>
+
+<p>YASE searches for this file in the same directory where its database files are located.</p>
+
+<p>
+<table border="1">
+<tr>
+<th>Section name</th>
+<th>Contents</th>
+<th>Parameters allowed</th>
+</tr>
+
+<tr>
+<td>##yase_header##</td>
+<td>The static header portion of the HTML page, starting from the &lt;body&gt; tag upto and including the &lt;h1&gt; tag.</td>
+<td>None</td>
+</tr>
+
+<tr>
+<td>##yase_rowheader##</td>
+<td>YASE outputs query results row by row. This section should contain a header for the rows.</td>
+<td>None</td>
+</tr>
+
+<tr>
+<td>##yase_row##</td>
+<td>The format of an individual row of query output.</td>
+<td>
+%l - href or link to the document<br>
+%r - rank<br>
+%t - title of the document<br>
+%s - size of the document in bytes<br>
+%h - number of query terms found in the document
+</td>
+</tr>
+
+<tr>
+<td>##yase_rowfooter##</td>
+<td>The footer for the query results.</td>
+<td>None</td>
+</tr>
+
+<tr>
+<td>##yase_firstenabled##</td>
+<td>Contents of the First button when enabled.</td>
+<td>%l - href or link to re-execute query</td>
+</tr>
+
+<tr>
+<td>##yase_firstdisabled##</td>
+<td>Contents of the First button when enabled.</td>
+<td>None</td>
+</tr>
+
+<tr>
+<td>##yase_prevenabled##</td>
+<td>Contents of the Prev button when enabled.</td>
+<td>%l - href or link to re-execute query</td>
+</tr>
+
+<tr>
+<td>##yase_prevdisabled##</td>
+<td>Contents of the Prev button when enabled.</td>
+<td>None</td>
+</tr>
+
+<tr>
+<td>##yase_nextenabled##</td>
+<td>Contents of the Next button when enabled.</td>
+<td>%l - href or link to re-execute query</td>
+</tr>
+
+<tr>
+<td>##yase_nextdisabled##</td>
+<td>Contents of the Next button when enabled.</td>
+<td>None</td>
+</tr>
+
+<tr>
+<td>##yase_lastenabled##</td>
+<td>Contents of the Last button when enabled.</td>
+<td>%l - href or link to re-execute query</td>
+</tr>
+
+<tr>
+<td>##yase_lastdisabled##</td>
+<td>Contents of the last button when enabled.</td>
+<td>None</td>
+</tr>
+
+<tr>
+<td>##yase_newquery##</td>
+<td>Link to the query page.</td>
+<td>%l - href or link to start a new query</td>
+</tr>
+
+<tr>
+<td>##yase_footer##</td>
+<td>The static footer (bottom) portion of the HTML page, upto and including the &lt;/body&gt; tag.</td>
+<td>None</td>
+</tr>
+
+</table>
+</p>
+
+<p>If you want to customise the template file, bear in mind that the Navigation Menu (First, Prev, Next, Last, New Query) is presented inside a border-less table. See <a href="yase_queryresults.html"><tt>examples/yase_queryresults.html</tt></a> as an example of an output page produced by YASE using the default template.</p>
+
+<p>The template file is not mandatory because <tt>yasequery</tt> has a built-in default mechanism for showing query results.</p>
+
+<h2>Testing YASE</h2>
+
+<p>To get a feel for how YASE works, I suggest you setup a test as described below:</p>
+
+<ul>
+<li>In the YASE installation directory you will find a directory called <tt>sample</tt>. <tt>cd</tt> to that directory.</li>
+
+<li>Make sure you have setup the following environment variables (this is applicable for Linux - you may need to follow different steps on other Operating Systems): 
+
+<pre class="text">
+YASEHOME        - Should point to YASE installation directory 
+PATH            - Should contain $YASEHOME/bin
+LD_LIBRARY_PATH - Should contain $YASEHOME/libxml/lib
+</pre>
+</li>
+
+<li>Now create the test database as follows: 
+
+<div class="tty">
+<pre class="tty">
+$YASEHOME/bin/yasemakedb -h $YASEHOME/sample \ 
+       -r $YASEHOME -s \
+       $YASEHOME/sample
+</pre>
+</div>
+</li>
+
+<li>Create a sub-directory called <tt>sample</tt> below your Web Server's <tt>DocumentRoot</tt> directory. Copy all files from <tt>$YASEHOME/sample</tt> to above directory. Alternatively you can create a symbolic link called <tt>sample</tt> from the <tt>DocumentRoot</tt> directory to the <tt>$YASEHOME/sample</tt> directory. If you choose to create a link, make sure that the user who runs the Web Server can read files in <tt>$YASEHOME/samples</tt> directory.</li>
+
+<li>Copy the file <tt>yase_search.html</tt> from <tt>$YASEHOME/examples</tt> to your Web Server's <tt>DocumentRoot</tt> directory.</li>
+
+<li>Copy the program <tt>yasequery</tt> from <tt>$YASEHOME/bin</tt> to your Web Server's <tt>cgi-bin</tt> directory.</li>
+
+<li>Invoke Netscape or lynx and invoke <tt>yase_search.html</tt>.</li>
+
+<li>Try the query 'nine days old porridge'. You should get back several pages of results.</li>
+
+<li>Try another query such as 'cheshire cat'.</li>
+</ul>
+
+<hr>
+<p>Copyright (C) 2000-2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a></p>
+</body>
+</html>
+

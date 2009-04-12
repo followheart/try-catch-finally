@@ -1,0 +1,140 @@
+5-6 May 2002
+
+Added support for wvToolkit.
+Added word2xml.sh.
+Added new filter (yasewvcnv) to convert output from WvHtml to XML format.
+
+8-10 May 2002
+
+Added new filter for converting HTML files to XML format
+
+11 May 2002
+
+Disk on my PC crashed. Lost changes related to inlining of functions.
+
+12 May 2002
+
+Ported to Win32 (excluding wget and libxml).
+Inlined some btree, bitfile, and compress functions.
+
+24 May 2002
+
+Built yasemakedb with wget and libxml support on Win32.
+
+15 Nov 2002
+
+Fixed compilation problems on Linux caused by the win32 port.
+
+21 Nov 2002
+
+Fixed memory allocation bug in alloc.c.
+
+28 Nov 02
+
+Started conversion to C++. Initially, recompiled everything as C++.
+
+29 Nov 02
+
+Created new class BitFile - replacing old ys_bitfile_t.
+
+02 Dec 02
+
+Created new class PorterStemmer.
+
+03 Dec 02
+
+Fixed bug in Btree (ys_block_set_curkey).
+
+04 Dec 02
+
+Created new class PostFile representing Postings. This hides the implementation
+details of the Postings file.
+
+Started reading/thinking about how to implement ranking in boolean queries.
+
+06 Dec 02
+
+Created new file formulas.h and moved all the logic for calculating IDF, etc.
+to this file.
+
+Released 1.0.0b and 1.0.8a containing Btree bug-fix.
+
+07 Dec 02
+
+Created new class Collection. 
+
+Create new files docweights.[hc]. This implements the new routines for calculating document weights. The new method works post index creation - this 
+enables it to use more statistics, such as maxtf and maxdtf. Still need per 
+document max term frequency for some of the formulas.
+
+Changed version number to 1.1.0 - this is to mark the transition to C++.
+
+08 Dec 02
+
+Added support for storing max term frequency per document. This allows the document term frequency to
+be normalised when calculating document term weight.
+
+Document weights are now calculated after the BTree index has been built. New module docweights.cpp.
+
+10 Dec 02
+
+New class Search to represent an abstract search class.
+New classes SearchResultSet and SearchResultItem.
+
+18 Dec 02
+
+New class RankedSearch to represent Ranked queries. 
+
+25 Dec 03
+
+New class BooleanSearch to represent Boolean searches.
+
+31 Dec 02
+
+Tokenizer module rewrite. New StringTokenizer class. 
+
+01 Jan 03
+
+Support for extracting ascii text from UTF-8 source.
+
+02 Jan 03
+
+Search classes modified to use tokenizers. With this change, all input parsing is done
+using tokenizers.
+
+04 Jan 03
+
+New classes SaxParser, HtmlParser and XmlParser - converted from code in getword.cpp.
+
+07 Jan 03
+
+StringTokenizer and derivatives converted to templates.
+
+13 Jan 03
+
+New file globals.cpp to define Ys_debug.
+
+12-22 Jan 03
+
+New classes to manage input and output. 
+QueryForm represents the input Form.
+QueryInput is an abstract class that represents the input stream.
+QueryOutput is an abstract class that represents the output stream.
+QueryAction is responsible for executing queries.
+WebInput is a derived class that implements CGI input.
+HtmlOutput is a derived class that implements HTML output.
+ConsoleOutput is a derived class that implements simple text output (this is incomplete).
+
+23 Jan 03
+
+New class Properties.
+
+26 Jan 03
+
+New class YaseQuery encapsulates the yasequery functionality. Only
+CGI Input and HTML Output is provided.
+
+27 Jan 03
+
+All classes now belong to namespace yase. 
+

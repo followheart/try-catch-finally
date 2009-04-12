@@ -1,0 +1,135 @@
+# Build yase
+
+VERSION = 1.0.8a
+DISTNAME = yase-$(VERSION)
+LIBXML_NAME = libxml2-2.4.15
+WGET_NAME = wget-1.5.3
+
+SHELL = /bin/sh
+@SET_MAKE@
+
+srcdir = @srcdir@
+VPATH  = @srcdir@
+
+#
+# Install variables
+#
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+libdir      = @libdir@
+includedir  = @includedir@
+distdir     = $(DISTNAME)
+USE_LIBXML  = @use_libxml@
+USE_WGET    = @use_wget@
+
+CC = gcc
+CFLAGS = -g -O -Wimplicit -Wimplicit-prototypes -Wreturn-type -Wcomment
+
+LDFLAGS = -g @LDFLAGS@
+
+#
+# End of user configuration section.  There should be no need to change
+# anything below this line.
+#
+
+RM = rm -f
+
+# These are used for maintenance only, so they are safe without
+# special autoconf cruft.
+GZIP = gzip
+TAR = tar
+
+# flags passed to recursive makes in subdirectories
+MAKEDEFS = CC='$(CC)' CFLAGS='$(CFLAGS)' LDFLAGS='$(LDFLAGS)' \
+VERSION='$(VERSION)' DISTNAME='$(DISTNAME)' LIBXML_NAME='$(LIBXML_NAME)' \
+WGET_NAME='$(WGET_NAME)' USE_WGET='$(USE_WGET)' USE_LIBXML='$(USE_LIBXML)'
+
+# subdirectories in the distribution
+SUBDIRS = src # doc examples sample test
+
+DISTFILES = acconfig.h configure.in README Makefile.in COPYING mkinstalldirs \
+install-sh configure Changes.txt
+
+ifeq ($(USE_LIBXML),1)
+ifeq ($(USE_WGET),1)
+	TARGET=Makefile $(SUBDIRS) $(LIBXML_NAME) $(WGET_NAME)
+else
+	TARGET=Makefile $(SUBDIRS) $(LIBXML_NAME) 
+endif
+else
+ifeq ($(USE_WGET),1)
+	TARGET=Makefile $(SUBDIRS) $(WGET_NAME)
+else
+	TARGET=Makefile $(SUBDIRS)
+endif
+endif
+
+
+# default target
+all: $(TARGET)
+
+$(SUBDIRS): FORCE
+	cd $@ && $(MAKE) $(MAKEDEFS)
+
+$(LIBXML_NAME): FORCE
+	cd $@ && $(MAKE)
+
+$(WGET_NAME): FORCE
+	cd $@ && $(MAKE)
+
+# install everything
+install: 
+	if test x$(USE_LIBXML) = "x1"; then \
+		cd $(LIBXML_NAME) && $(MAKE) $@ ;\
+	fi
+	if test x$(USE_WGET) = "x1"; then \
+		cd $(WGET_NAME) && $(MAKE) $@;\
+	fi
+	cd src && $(MAKE) $(MAKEDEFS) $@
+	cd sample && $(MAKE) $(MAKEDEFS) $@
+	cd examples && $(MAKE) $(MAKEDEFS) $@
+
+clean:
+	cd src && $(MAKE) $(MAKEDEFS) $@
+	cd $(LIBXML_NAME) && $(MAKE) clean
+	cd $(WGET_NAME) && $(MAKE) clean
+
+dist: distdir
+	cp $(DISTFILES) $(DISTNAME)
+	cd doc && $(MAKE) $(MAKEDEFS) $@
+	cd examples && $(MAKE) $(MAKEDEFS) $@
+	cd sample && $(MAKE) $(MAKEDEFS) $@
+	cd src && $(MAKE) $(MAKEDEFS) $@
+	cd test && $(MAKE) $(MAKEDEFS) $@
+	cp -R win32 $(DISTNAME)		
+	cd $(LIBXML_NAME) && $(MAKE) clean
+	cd $(WGET_NAME) && $(MAKE) clean
+	cp -R $(LIBXML_NAME) $(DISTNAME)		
+	cp -R $(WGET_NAME) $(DISTNAME)		
+	tar cvfz $(DISTNAME).tar.gz $(DISTNAME) 
+	$(RM) -r $(DISTNAME)
+
+distdir:
+	$(RM) -r $(DISTNAME)
+	@mkdir $(DISTNAME)
+
+${srcdir}/configure: configure.in 
+	cd ${srcdir} && autoconf
+
+${srcdir}/config.h.in: stamp-h.in
+${srcdir}/stamp-h.in: configure.in  acconfig.h
+	cd ${srcdir} && autoheader
+	echo timestamp > ${srcdir}/stamp-h.in
+
+config.h: stamp-h
+stamp-h: config.h.in config.status
+	./config.status
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+	
+FORCE:

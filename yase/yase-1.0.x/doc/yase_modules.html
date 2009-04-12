@@ -1,0 +1,246 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>YASE Modules</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="">
+<meta name="Keywords" content="">
+</head>
+<body>
+<h1>YASE Modules</h1>
+
+<pre class="text">
+Customizable modules
+--------------------
+* document locator - this module locates documents from a given pathname,
+  and for each document found, invokes a user supplied argument. 
+  It handles the traversal of directory structures. It also interfaces
+  to a custom version of the <a href="http://sunsite.dk/wget/">wget</a> 
+  utility to enable traversal of web sites.
+  Implementation is in locator.c. Header file is locator.h.
+
+  ys_locate_documents() - scans a directory structure or web site for documents
+    
+* getword - this module is responsible for extracting words from a given
+  document. Filters are handled in this module. This module is also 
+  responsible for parsing HTML and XML documents. Implementation is in 
+  getword.c. Header file is getword.h.
+
+  ys_document_process() - extracts words from a document and feeds it to
+                       the YASE indexer
+
+* queryoutput - this module is responsible for sending query output to the
+  user. HTML output is generated based on a template file. Implementation is 
+  in queryout.c. Header file is queryout.h.
+
+  ys_query_output_open() - opens an output stream for query results
+  ys_query_output_header() - outputs the header portion of the results page
+  ys_query_output_row() - sends an individual query result
+  ys_query_output_message() - sends an informative or error message
+  ys_query_output_summary() - displays summary and paging information
+  ys_query_output_close() - closes the query output stream
+
+* queryinput - this module is responsible for reading query from the user.
+  It handles both input from <tty>stdin</tty> as well as the Web Browser.
+  Implementation is in queryin.c. Header file is queryin.h.
+
+  ys_query_input() - gets query input from user
+
+Top level modules
+-----------------
+* term extractor - this module processes documents and creates the YASE
+  database files. This is a top level module. The logic for creating the
+  postings file is in this module.
+  Implementation is in makedb.c. Header file is makedb.h.
+
+  ys_mkdb_create_database() - creates the YASE database and index
+  ys_mkdb_foreachposting() - evaluates a function against each posting for a
+      term
+
+* indexer - this module creates the YASE B-Tree index. This is also a 
+  top-level module.
+  Implementation is in btree.c. Header file is btree.h.
+
+  ys_btree_create() - creates a btree index
+  ys_btree_dump_blocks() - dumps blocks of an index
+  ys_btree_open() - opens a btree index
+  ys_btree_open_mode() - opens a btree index in specified mode
+  ys_btree_close() - closes the btree index
+  ys_btree_iterate() - evaluates a function for each key starting from a key 
+                    until the function returns false
+
+* query analyzer - this module processes user queries and lists documents
+  matching the search criteria.
+  Implementation is in boolquery.c, rankedquery.c, and query.c.   
+  Header file is query.h.
+
+  ys_open_collection() - opens all files of YASE database
+  ys_close_collection() - closes all files of a YASE database
+  ys_query_evaluate() - evaluates a query
+  ys_query_output_results() - sends results of the query to the output module
+
+* configuration - this module allows YASE to be configured by specifying
+  parameters in a file. Implementation is in config.c.
+  Header files is config.h.
+
+  ys_get_config() - gets value for a parameter
+
+Low level modules
+-----------------
+* parameters manager - manages lists of properties using files.
+  Implementation in param.c and header param.h.
+  
+  ys_load_parameters() - loads the parameters from a file
+  ys_get_parameter() - retrieves a named parameter
+
+* document reference storage manager - this module provides an api to
+  open a database containing a list of document references. A document
+  can be referenced given its reference number. Implementation is in
+  file docdb.c and header is docdb.h.
+
+  ys_dbopen() - opens a document database
+  ys_dbclose() - closes a document database
+  ys_dbaddfile() - adds a file reference to the database
+  ys_dbadddoc() - adds a document reference to the database
+  ys_dbadddocptr() - adds a document/file link to the database
+  ys_dbgetdocumentref() - retrieves details of a document
+  ys_dbnumdocs() - returns number of documents in the database
+  ys_dbadddocweight() - saves a document's weight
+  ys_dbgetdocweight() - retrieves a document's weight
+  ys_dbaddinfo() -  saves various statistics about the database
+  ys_dbgetinfo() - retrieves various statistics related to the database
+
+* linked list - this module provides a doubly linked list which is 
+  used in many other modules. 
+  Implementation is in list.c. Header file is list.h.
+
+  ys_list_init() - initiliazes a list
+  ys_list_append() - adds an element to the end
+  ys_list_prepend() - adds an element to the front
+  ys_list_insert_before() - adds an element before another
+  ys_list_insert_after() - adds an element after another
+  ys_list_first() - gets the first element
+  ys_list_next() - gets the next element
+  ys_list_last() - gets the last element
+  ys_list_prev() - gets the previous element
+  ys_list_remove() - removes an element from the list
+
+* Block file - this module implements block IO routines used by the btree
+  manager. Simple LRU is used.
+  Implementation file is blockfile.c. Header file is blockfile.h.
+
+  ys_blockfile_open - opens a block file
+  ys_blockfile_get - gets a block
+  ys_blockfile_put - puts back a block
+  ys_blockfile_new - creates a new block
+  ys_blockfile_close - closes the file
+
+* Bit file - this module implements bit-wise IO routines.
+  Implementation file is bitfile.c. Header file is bitfile.h.
+
+  ys_bopen() - opens a file for bit-wise io
+  ys_bflush() - flushes the output
+  ys_bgeof() - tells you whether EOF was reached while reading
+  ys_bgetbit() - gets a bit from input
+  ys_bputbit() - puts a bit to output
+  ys_bgetbits() - gets specified number of bits from input
+  ys_bputbits() - writes specified number of bits to output
+  ys_bsetgpos() - sets read position (in multiples of long)
+  ys_bgetgpos() - gets read position 
+  ys_bsetppos() - sets write position
+  ys_bgetppos() - gets write position
+  ys_bclose() - closes the file
+
+* compression routines - this module provides compression routines which
+  operate on bit-wise IO routines. 
+  Implementation file is compress.c. Header file is compress.h.
+
+  ys_unary_encode() - Encodes a number using UNARY encoding
+  ys_unary_decode() - Decodes a UNARY encoded number
+  ys_gamma_encode() - Encodes a number using GAMMA encoding
+  ys_gamma_decode() - Decodes a GAMMA encoded number
+  ys_binary_encode() - Encodes a number using BINARY encoding
+  ys_binary_decode() - Decodes a BINARY encoded number
+  ys_delta_encode() - Encodes a number using DELTA ? encoding
+  ys_delta_decode() - Decodes a DELTA ? encoded number
+
+* avl tree - this module implements a height balanced (avl) binary search
+  tree.
+  Implementation is in avl3a.c, avl3b.c. Header files are avl3.h and avl3int.h
+
+  AVLTree_New - creates a new tree
+  AVLTree_Search - searches for a key
+  AVLTree_Insert - inserts a new object
+  AVLTree_Delete - delete an object by key
+  AVLTree_DeleteObject - deletes an object
+  AVLTree_FindFirst - gets first object in the tree
+  AVLTree_FindLast - gets last object in the tree
+  AVLTree_FindNext - gets next object
+  AVLTree_FindPrevious - gets previous object
+  AVLTree_Height - determines height of the tree
+  AVLTree_Foreach - applies a function to every object starting from first
+  AVLTree_Backeach - applies a function to every object starting from last
+  AVLTree_Destroy - destroys a tree
+
+* fast memory allocator - this module provides fast memory allocation routines.
+  Implemented in alloc.c, header file is alloc.h.
+  
+  ys_new_allocator() - returns handle to a new allocator object
+  ys_allocate() - allocates a chunk of memory
+  ys_deallocate() - deallocates memory previously allocated by allocate()
+  ys_destroy_allocator() - frees all memory used by an allocator object
+  ys_allocmem() - similar to malloc()
+  ys_freemem() - similar to free()
+  ys_reallocmem() - similar to realloc()
+  ys_destroyallmem() - free all memory allocated by allocmem() 
+
+* stemmer - extracts stems of words.
+  Implementation in stem.c and header in stem.h.
+
+  stem() - stem a word
+
+* xml reader - parse XML or HTML documents
+
+  This is implemented in xmlparser.h and xmlparser.c. 
+
+* file io - file input/output routines. Implemented in ystdio.c and ystdio.h.
+
+  ys_file_open() - open a file
+  ys_file_close() - close a file
+  ys_file_getpos() - get current file position
+  ys_file_setpos() - set current file position
+  ys_file_seek() - seek to a file position
+  ys_file_printf() - similar to fprintf()
+  ys_file_vprintf() - similar to vfprintf()
+  ys_file_gets() - similar to fgets()
+  ys_file_read() - similar to fread()
+  ys_file_write() - similar to fwrite()
+  ys_file_getc() - similar to fgetc()
+  ys_file_putc() - similar to fputc()
+  ys_file_error() - similar to ferror()
+  ys_file_eof() - similar to feof()
+  ys_file_rewind() - similar to rewind()
+  ys_pipe_open() - similar to popen()
+  ys_pipe_close() - similar to pclose()
+
+* Bit Set manipulation. 
+
+  This module implements the bitset manipulation routines used by the
+  boolean query analyzer.
+  Implemented in bitset.c and bitset.h
+
+* Utilities
+
+  This module contains utilities used by the rest of the system.
+  Implemented in util.c and util.h.
+
+</pre>
+
+<hr>
+Copyright &copy; 2000-2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a>
+</body>
+</html>
+

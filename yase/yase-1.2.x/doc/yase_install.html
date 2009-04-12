@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>YASE Installation Guide</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="YASE Installation Page">
+<meta name="Keywords" content="YASE Installation Guide">
+</head>
+<body>
+<h1>YASE Installation Guide</h1>
+
+<h2>Platforms supported by YASE</h2>
+
+<p>YASE should work on most UNIX platforms. The author has tested it on SUSE Linux 
+  8.0 only. YASE also works on Win32 platforms, including Windows 98. However, 
+  the installation process on Win32 is not documented. Visual C++ (6.0) project 
+  files are provided so that you can build YASE on Windows.</p>
+
+<h2>Pre-requisites for compiling YASE</h2>
+
+<p>YASE requires the GNU Make utility.</p>
+
+<h2>External libraries used by YASE</h2>
+
+<p>YASE can optionally use the <a href="http://xmlsoft.org">libxml</a> library to enable parsing of XML and HTML files. A version of this is included in the distribution.</p>
+
+<p>YASE also uses the <a href="http://sunsite.dk/wget/">wget (version 1.5.3)</a> utility for traversing web sites. A version of this tool is included in the distribution; it has been modified so that it can be linked to YASE as a library.</p>
+
+<h2>Building and Installing YASE on Linux</h2>
+
+<p>To build YASE follow these steps.</p>
+
+<ul>
+<li>Download the latest version of YASE. See <a href="yase_download.html">Downloading YASE</a> for more information on how to obtain YASE.</li>
+
+<li>Decide on a home directory for YASE. The default is <tt>/usr/local</tt>.</li>
+
+<li>Unpack yase into a build directory as follows (this should be different from the home directory you decided above):<br>
+<div class="tty">
+<pre class="tty">
+mkdir [build_directory]
+cd [build_directory]
+tar xvfz [yase release file]
+</pre>
+</div>
+
+or, if your tar command does not support the 'z' option:<br>
+<div class="tty">
+<pre class="tty">
+mkdir [build_directory]
+cd [build_directory]
+gunzip [yase release file]
+tar xvf [yase tar file]       
+</pre>
+</div>
+</li>
+
+<li>You should now end up with the YASE sub-directory. <tt>cd</tt> to this directory.</li>
+
+<li>Execute configure as follows:<br>
+<div class="tty">
+<pre class="tty">
+./configure --prefix=[yase home directory]
+</pre>
+</div>
+
+You can specify <tt>'--enable-libxml'</tt> to enable linking of <tt>libxml</tt>. <tt>wget</tt> is linked in by default; you can disable linking of <tt>wget</tt> by specifying <tt>'--disable-wget'</tt>.</li>
+
+<li>You can now build YASE by simply executing:<br>
+<p></p>
+
+<div class="tty">
+<pre class="tty">
+make
+</pre>
+</div>
+</li>
+
+<li>To install YASE you can execute:<br>
+<div class="tty">
+<pre class="tty">
+make install
+</pre>
+</div>
+</li>
+
+<li>See <a href="yase_config.html">Configuring and using YASE</a> for information on how to execute YASE.</li>
+</ul>
+
+<hr>
+<p>Copyright &copy; 2000-2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a></p>
+</body>
+</html>
+

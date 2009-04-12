@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>Things to do for YASE</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="">
+<meta name="Keywords" content="">
+</head>
+<body>
+<h1>Things to do</h1>
+
+<p>YASE is work in progress - therefore many features are planned but have not 
+  yet made it.</p>
+
+<ul>
+  <li>64-bit file input/output for YASE database files. This is to support very 
+    large databases.</li>
+  <li>Ability to add documents to an existing collection. Currently the database 
+    needs to be rebuilt if the document collection changes.</li>
+  <li>Query processing logic can be improved to handle cases where a large number 
+    of documents are selected. YASE tries to retrieve everything - which can take 
+    quite a while if the collection is large and the query selects a large majority 
+    of documents.</li>
+  <li>All data is currently stored in files. I would like to provide the alternative 
+    of using a DBMS (such as Oracle) for data storage. </li>
+  <li>Need to compress the data stored in yase.files and yase.docs.</li>
+  <li>Would like to provide a facility for storing the first few sentences of 
+    a document so that when query results are displayed, the user can be given 
+    an idea of the content of the document. This will have to be stored in a compressed 
+    form.</li>
+  <li>Currently, the query tool is a CGI program. Would like to build a Servlet 
+    interface to the query tool. I would like to convert the existing query tool 
+    (yasequery) to a multi-threaded query server, using a socket to link the Java 
+    Servlet to the server. This would not only improve performance but also make 
+    YASE more scalable.</li>
+</ul>
+
+<hr>
+<p>Copyright &copy; 2000-2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a></p>
+</body>
+</html>
+

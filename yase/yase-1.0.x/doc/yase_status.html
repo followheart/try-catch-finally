@@ -1,0 +1,301 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>YASE Modification Log</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="">
+<meta name="Keywords" content="">
+</head>
+
+<body>
+<h1>
+YASE Modification Log
+</h1>
+
+<pre class="text">
+21 Nov 2002
+Fixed hideous bug in alloc.c introduced in release 1.0 (alas).
+
+15 Nov 2002
+Fixed compilation problems on Linux caused by the win32 port.
+
+24 May 2002
+Built yasemakedb with wget and libxml support on Win32.
+
+12 May 2002
+Ported to Win32 (excluding wget and libxml).
+Inlined some btree, bitfile, and compress functions.
+
+11 May 2002
+Disk on my PC crashed. Lost changes related to inlining of functions.
+
+8-10 May 2002
+Added new filter for converting HTML files to XML format
+
+5-6 May 2002
+Added support for wvToolkit.
+Added word2xml.sh.
+Added new filter (yasewvcnv) to convert output from WvHtml to XML format.
+
+15-20 Feb 2002
+* Changed boolean query parser to accept "and", "or", and 
+  "not" keywords instead of &amp;, | and ! characters.
+* Fixed problems related to handling filenames/urls 
+  containing spaces. When storing a url, YASE now
+  decodes any special characters. When outputing a hyperlink, 
+  YASE now encodes url unsafe characters as hex sequences. 
+* Introduced global variable Ys_debug to control debug 
+  message output.
+* Changed the delimiter in YASE files from % to ^. This is 
+  because % character is used to start hex sequences in 
+  URLs.
+* When executing filters, YASE now encloses the filename 
+  argument in quotes - this allows filters to work
+  on filenames that have embedded spaces.
+* YASE tested with catdoc and pdftotext, both in local 
+  file-system mode, and http mode.
+* New script pdf2text created as a front-end to pdftotext. 
+  pdftotext cannot send output to stdout - the script 
+  saves the output to a temporary file and then dumps it 
+  to stdout.
+* Introduced html templates - the output from yasequery 
+  can now be customised.
+* Introduced new navigation menu - query results page 
+  now supports customisable first, next, prev and last page 
+  buttons.
+* yasequery now recognises short names for all of its 
+  input variables.
+* YASE now generates output in XML format when running in 
+  text mode.
+* YASE distribution made smaller by removing some unsed
+  components of LIBXML and WGET.
+* YASE upgraded to use libxml2-2.4.15.
+* YASE Makefile fixed so that version.h is recreated when
+  building YASE.
+
+16 Nov 2001
+* Fixed portability problems in ys_file_setpos() and ys_file_getpos().
+* Fixed incorrect use of va_start() in ys_file_printf().
+
+25 Aug 2001
+* Renamed most of global functions in YASE to avoid conflicts with names
+  used in system header files.
+
+16 Apr 2001
+* Completed an implementation of boolean query. Turned out to be much easier
+  than I thought it would be.
+* Updated documentation to reflect above.
+
+08 Apr 2001
+* YASE now uses the configure utility to ease the make process.
+* A small xml/html parser written. In future I plan to use this rather than
+  libxml because I don't really need all the functionality in libxml.
+* Documentation updated, and modified to use stylesheets.
+
+25 Nov 2000
+* Finally started work on YASE again after a long break.
+* Introduced the concept of logicalname in docdb functions.
+* Completed first cut integration with wget. For this purpose,
+  transformed wget into a library.
+* Updated documentation to reflect the fact that YASE can now
+  index web sites.
+
+29 Oct 2000
+* Introduced the concept of logicalname in document_process().
+
+8 Oct 2000
+* Started work on integrating wget with YASE. Port to Windows has taken a 
+  back seat as I want to first introduce the ability to index web sites
+  via http. To do this, I hope to make use of the GNU utility wget.
+  I chose wget after looking at several other products - primarily because
+  I liked the code quality. wget is modular and well written.
+
+7 July 2000
+
+* Re-introduced the ability to insert keys into the BTree.
+* Created a test harness for BTree.
+* Fixed a bug in btree_foreach().
+* Changed the licensing notice within the source files from LGPL to GPL.
+* Corrected reference to Web site in the source files.
+
+28 June 2000
+
+* Started work on version 0.9 which will contain:
+  + Ability to add documents to an existing collection
+  + Port to Windows 98
+  + More documentation
+
+27 June 2000
+
+* First public release - version 0.8.12
+
+24-25 June 2000
+
+* Documentation updates.
+* Renamed makedb to yasemakedb and query to yasequery.
+* Renamed indexdump to yaseindexdump and index to yaseindex.
+* Changed Makefile so that only yasemakedb and yasequery are built by
+  default.
+* Changed Makefile to copy contents of test to installation directory.
+
+5-13 May 2000
+
+* Changed getword.c to setup environment variables (YASE_FILENAME,
+  YASE_SIZE, YASE_DATECREATED, YASE_TITLE) when executing filters
+* Added 'Alice in Wonderland' text for testing.
+* Created filter txt2xml.awk for processing above.
+* More documentation updates.
+* Stream-lined code, eliminated globals from extract.c.
+* Added ystdio module.
+
+2-4 May 2000
+
+* Mainly documentation updates and cleanup
+
+29-Apr-2000
+
+* Added ability to accept xml input from user defined filters
+* Query output now displays hits against each term being searched
+
+27-Apr-2000
+
+* Ranked query support completed
+* Query input parsing modified to break up terms in the same way as
+  the Indexing algorithms
+
+26-Apr-2000
+
+* Added support for ranked queries - still incomplete
+
+21-Apr-2000 to 25-Apr-2000
+
+* Resumed work after a long break
+* Added support for piping filters when processing user defined document 
+  types
+* Started using the libxml 2.0.0 library to enable xml parsing
+* Added support for parsing html documents
+* Added support for multiple documents in a single file. Changes to file
+  formats - please see yase_files.html for more information.
+* New file called yase.files added. See yase_files.html.
+* Added document weight to yase.docptrs. See yase_ranking.html for more
+  details.
+* docdb.[hc] virtually re-written
+* getword.c has major changes to it
+
+23-Jan-2000
+
+* Enabled support for user defined document types.
+
+19-Jan-2000
+
+* wasn't sure whether it is more efficient to store document offets in
+  yase.postings or document numbers. finally added support to store
+  document numbers - document offsets can be worked out by looking up
+  a new file yase.docptrs. to my surprise overall compression improved
+  dramatically when using gamma encoding. presumably gamma encoding is
+  more suitable for small numbers.
+
+* also added support for storing term frequency with each term. originally
+  i had no plans of adding support for ranked queries but following 
+  discussions with ian northeast have changed my mind.
+
+* created new module docdb.c for manipulating yase.docs and yase.docptrs
+  files. this has improved the design by hiding details of these files.
+
+* fixed a bug in extract which was causing the first document in 
+  yase.docs to be excluded from the database.
+
+* current set of commands are:
+    makedb - create a database
+    query - query a database
+    index - recreates yase.btree 
+    indexdump - dumps yase.btree 
+
+* current set of files are:
+    yase.btree - index used by query
+    yase.postings - postings file 
+    yase.docs - list of documents in the database
+    yase.docptrs - pointers to documents in yase.docs. each pointer is
+       a long offset into the file yase.docs.
+    yase.words - intermediate file required to create the btree.
+
+18-Jan-2000
+
+* renamed command extract to makedb. it now creates yase.btree as
+  well.
+* changed logic for identifying binary files.
+
+17-Jan-2000
+
+* indexdump was broken - fixed.
+* New interface for extract allows user to specify database path, root path,
+  and memory limit. Root path option allows document references to be relative.
+* extract can now process any number of directories.
+* index can be given the database path as an argument.
+* query enhanced to allow exact match.
+* query enhanced to default collection path.
+* search.html enhanced to allow exact match.
+* query now locates the database relative to DOCUMENT_ROOT.
+
+16-Jan-2000
+
+* Internal revision mainly - see yase_modules.html for more details.
+* query 'match all terms' was broken - fixed.
+* query enhanced to process both web queries and queries on stdin.
+
+15-Jan-2000
+
+* extract modified to store gaps between offsets rather
+  than pure offsets because pure offsets do not compress well.
+
+14-Jan-2000
+
+* wquery interface enhanced to allow matching of any or all search terms.
+
+13-Jan-2000
+
+* Created search.html
+
+* Created wquery - the cgi program that can process queries submitted
+  from search.html. This is a modified version of query.
+
+12-Jan-2000
+
+* First cut of the indexer completed yesterday. Produces yase.btree.
+  In the process created block io sub-system.
+
+* First cut of indexdump utility completed yesterday.
+
+* First cut of query completed today. Supports search for one or more
+  words  - prefix match. Documents matching are returned.
+
+* The product now consists of 4 utilities:
+  extract: scans a directory and produces 3 files:
+     yase.docs - list of documents
+     yase.postings - document lists for each keyword
+     yase.words - sorted list of keywords/pointer to postings ready to be fed 
+        to the Btree
+  index: scans yase.words and produces yase.btree.
+  indexdump: dumps yase.btree for debugging purposes.
+  query: performs searches and returns documents matching the query.
+
+08-Jan-2000
+
+* Coded Btree creation/insertion. Memory based still - need to add file
+  IO. Keys and values are compressed.
+
+* First cut of the keyword Extractor completed. Produces three files after
+  processing a directory structure:
+     yase.docs - list of documents
+     yase.postings - document lists for each keyword
+     yase.words - sorted list of keywords/pointer to postings ready to be fed 
+        to the Btree
+  
+</pre>
+<hr>
+Copyright &copy; 2000-2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a>
+</body>
+</html>

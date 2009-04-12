@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>Introduction to YASE</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="Introduction to YASE - a Text Indexing and Search Engine">
+<meta name="Keywords" content="Internet Text Indexing Retrieval Search Engine YASE Introduction Main Features">
+</head>
+<body>
+<h1>Introduction to YASE</h1>
+
+<p>YASE stands for 'Yet Another Search Engine'. I am looking for a better name for this product - please feel free to send any suggestions.</p>
+
+<p>YASE is essentially a text indexing and retrieval system (search engine).</p>
+
+<h2>Main features of YASE</h2>
+
+<ul>
+<li>YASE is written in ISO C, and is being developed and tested on various flavours of Linux. 
+I have recently ported YASE to Win32.</li>
+
+<li>YASE can scan existing directory structures or web sites for documents, therefore it can work with your existing document collections.</li>
+
+<li>A single YASE database can contain references to files in multiple directories or web sites.</li>
+
+<li>YASE is easy to use - there are only two commands you need to use. One to build a database, the other to query it.</li>
+
+<li>YASE can be customised to read any type of document by providing a suitable filter to extract text out of the document.</li>
+
+<li>YASE indexes all words in a document. It can optionally "stem" words.</li>
+
+<li>YASE is designed to process large collections - attempts are made to compress the YASE database as much as possible.</li>
+
+<li>YASE supports searching any or all terms in a query. It also supports partial or exact match of terms.</li>
+
+<li>YASE can rank query results by relevance - it uses cosine vector similarity formula for ranking.</li>
+
+<li>YASE (as of version 0.9.7) supports boolean queries as well.</li>
+
+<li>YASE code quality is reasonably good - better than many competitive products. In particular global variables are avoided.</li>
+
+<li>YASE is modular in architecture - modules are fairly independent of each other which means a module can be enhanced easily.</li>
+
+<li>YASE is well documented - which should make it easier for you to understand how it works, and enhance it. If anything about YASE is unclear to you, please ask and I will try my best to update the documentation so that your query is answered.</li>
+
+<li>YASE is supported by me - in other words, if you find a bug I will try my best to fix it.</li>
+
+<li>YASE is <i>Free Software</i> - distributed under <strong>GPL</strong>. This means you can virtually do whatever you like with it (Freedom) provided you do not deny others the same freedom on any product derived from YASE.</li>
+</ul>
+
+<h2>Drawbacks of YASE</h2>
+
+<p>YASE is work in progress - therefore many features are planned but have not yet made it. Examples:</p>
+
+<ul>
+
+<li>64-bit file input/output for YASE database files.</li>
+
+<li>Ability to add documents to an existing collection. Currently the database needs to be rebuilt if the document collection changes.</li>
+
+<li>Query processing logic can be improved to handle cases where a large number of documents are selected. YASE tries to retrieve everything - which can take quite a while if the collection is large and the query selects a large majority of documents.</li>
+
+<li><a href="yase_todo.html">More ...</a></li>
+</ul>
+
+<hr>
+<p>Copyright &copy; 2000,2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a></p>
+</body>
+</html>
+

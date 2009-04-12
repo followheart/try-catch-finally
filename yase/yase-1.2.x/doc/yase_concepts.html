@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+<link rev="made" href="mailto:dibyendu@mazumdar.demon.co.uk">
+<link rel="stylesheet" type="text/css" href="yase.css">
+<title>YASE Concepts - An Overview</title>
+<meta name="Author" content="Dibyendu Majumdar">
+<meta name="Description" content="">
+<meta name="Keywords" content="">
+</head>
+
+<body>
+<h1>YASE Concepts</h1>
+
+<p>
+YASE consists of two basic tools. The yasemakedb tool creates a YASE database.
+The yasequery tool allows users to submit queries which are then processed and
+results are displayed to the user.
+</p>
+
+<p>
+The yasemakedb tool processes a set of directories or web sites by recursively
+scanning each directory or web site. Files are read after any preprocessing 
+(in case a filter was specified) and terms (words) extracted. These terms are 
+then stored in an index. For each term, a list of documents is maintained. 
+This list is stored in the postings file. Conceptually, once yasemakedb has 
+finished, we end up with an index (sorted list of terms) and for each term, 
+lists of documents. Some details about the documents themselves are also 
+stored for easy reference.
+</p>
+
+<p>
+The yasequery tool accepts a list of terms from the user and scans the index
+for these terms. Any terms found in the index are said to be matched, and
+yasequery then retrieves the document lists associated with the matched terms.
+The documents are sorted by their rank (relevance to the query) if necessary.
+The results (list of documents) are then shown to the user.
+</p>
+<hr>
+Copyright &copy; 2000-2002 by <a href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</a>
+</body>
+</html>
