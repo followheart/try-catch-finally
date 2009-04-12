@@ -1,0 +1,23 @@
+h1 {
+	color: #0066CC;
+	margin-left: -5%
+}
+h2,h3 {
+	color: #0066CC;
+	margin-left: -3%
+}
+body { 
+    color: black; background: white;
+	font-family: sans-serif;
+	margin-left: 10%;
+	margin-right: 10%
+}
+em { 
+    font-style: italic; font-weight: bold 
+}
+strong { 
+    font-weight: bold 
+}
+address {
+	color: Black;
+}
