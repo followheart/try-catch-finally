@@ -1,0 +1,18 @@
+# Build yase
+
+SHELL = /bin/sh
+
+top_srcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH  = @srcdir@
+
+DISTFILES = Makefile.in test.btree.* testyq
+
+distdir = $(top_srcdir)/$(DISTNAME)/test
+
+clean:
+
+dist:
+	$(top_srcdir)/mkinstalldirs $(distdir) 
+	cp $(DISTFILES) $(distdir)
+

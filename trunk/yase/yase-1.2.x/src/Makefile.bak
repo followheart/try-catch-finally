@@ -1,0 +1,210 @@
+# Generated automatically from Makefile.in by configure.
+# Build yase
+
+SHELL = /bin/sh
+
+top_srcdir = ..
+srcdir = .
+
+prefix = /home/dibyendu/yase
+exec_prefix = ${prefix}
+bindir = ${exec_prefix}/bin
+libdir = ${exec_prefix}/lib
+includedir = ${prefix}/include
+distdir = $(top_srcdir)/$(DISTNAME)/src
+
+CC = $(CC)
+CXX = $(CXX)
+CFLAGS = 
+LDFLAGS = 
+DEFS = -DHAVE_CONFIG_H
+
+ifeq ($(USE_LIBXML),1)
+# TARGET = yasemakedb yasequery yasewvcnv yasehtmcnv
+TARGET = yasemakedb testsearch
+else
+# TARGET = yasemakedb yasequery
+TARGET = yasemakedb testsearch
+endif
+
+EXTRA_TARGET = yaseindexdump 
+TEST_TARGET = bitfile cmpress btree
+IRS_FILES = yase.docs yase.postings yase.words yase.btree \
+	yase.docptrs yase.files yase.info
+TMP_FILES = tmp.* test.btree
+# RELEASE_FILES = test docs examples Makefile COPYING README *.h *.c yase.config  test.btree.input1 test.btree.input2 test.btree.input3
+
+INSTALL = /usr/bin/install -c
+INSTALL_PROGRAM = ${INSTALL}
+INSTALL_DATA = ${INSTALL} -m 644
+
+XMLCONFIG_CMD = $(bindir)/xml2-config
+
+ifeq ($(USE_LIBXML),1)
+	XMLCONFIG_CFLAGS = $(XMLCONFIG_CMD) --cflags
+	XMLCONFIG_LIBS = $(XMLCONFIG_CMD) --libs
+else
+	XMLCONFIG_CFLAGS = 
+	XMLCONFIG_LIBS = 
+endif
+WGET_DIR = $(libdir)
+ifeq ($(USE_WGET),1)
+	WGET_LIBS = -L $(WGET_DIR) -lwget
+else
+	WGET_LIBS =
+endif
+
+default: $(TARGET) 
+all: $(TARGET) $(EXTRA_TARGET) $(TEST_TARGET)
+
+tbitfile.o: bitfile.c bitfile.h yase.h
+	$(CC) -o $@ -c $(CFLAGS) -DTEST_BITFILE $<
+
+tcompress.o: compress.c bitfile.h yase.h compress.h
+	$(CC) -o $@ -c $(CFLAGS) -DTEST_COMPRESS $<
+
+tbtree.o: btree.c btree.h list.h yase.h ystdio.h blockfile.h
+	$(CC) -o $@ -c $(CFLAGS) -DTEST_BTREE $<
+
+talloc.o: alloc.c alloc.h yase.h
+	$(CC) -o $@ -c $(CFLAGS) -DTEST_ALLOC $<
+
+version.h:
+	@echo "static char Yase_version[] = \"$(VERSION)\";" > version.h
+
+#yasemakedb.o: makedb.h yase.h list.h bitfile.h ystdio.h avl3.h alloc.h compress.h
+#yasemakedb.o: getword.h docdb.h locator.h stem.h btree.h blockfile.h wgetargs.h version.h
+#yasemakedb.o: makedb.c
+#	$(CC) -o $@ -c $(CFLAGS) -DYASEMAKEDB $<
+
+YASEMAKEDB_OBJS = makedb.o avl3a.o avl3b.o alloc.o locator.o getword.o \
+	stem.o btree.o blockfile.o list.o docdb.o properties.o getconfig.o \
+	ystdio.o xmlparser.o getopt.o getopt1.o util.o postfile.o cbitfile.o \
+	tokenizer.o collection.o docweights.o saxparser.o globals.o
+
+yasemakedb: $(YASEMAKEDB_OBJS)
+	$(CXX) $(LDFLAGS) -o $@ $(YASEMAKEDB_OBJS) \
+		-lm `$(XMLCONFIG_LIBS)` $(WGET_LIBS)
+
+YASEQUERY_OBJS = search.o boolsearch.o rankedsearch.o btree.o list.o \
+	blockfile.o cbitfile.o avl3a.o avl3b.o alloc.o stem.o bitset.o \
+	util.o ystdio.o docdb.o param.o getconfig.o collection.o \
+	tokenizer.o postfile.o
+
+testsearch: $(YASEQUERY_OBJS) testsearch.o
+	$(CXX) $(LDFLAGS) -o $@ $(YASEQUERY_OBJS) testsearch.o
+
+yaseindexdump: indexdump.o btree.o list.o blockfile.o ystdio.o
+	$(CC) $(LDFLAGS) -o $@ indexdump.o btree.o list.o blockfile.o ystdio.o
+
+yasewvcnv: wvconvert.o
+	$(CC) $(LDFLAGS) -o $@ wvconvert.o \
+		`$(XMLCONFIG_LIBS)` 
+
+yasehtmcnv: htmconvert.o
+	$(CC) $(LDFLAGS) -o $@ htmconvert.o \
+		`$(XMLCONFIG_LIBS)` 
+
+bitfile: tbitfile.o ystdio.o
+	$(CC) $(LDFLAGS) -o $@ tbitfile.o ystdio.o
+
+cmpress: tcompress.o bitfile.o alloc.o ystdio.o
+	$(CC) $(LDFLAGS) -o $@ tcompress.o bitfile.o alloc.o ystdio.o
+
+btree: tbtree.o list.o ystdio.o blockfile.o 
+	$(CC) $(LDFLAGS) -o $@ tbtree.o list.o ystdio.o blockfile.o
+
+talloc: talloc.o
+	$(CC) $(LDFLAGS) -o $@ talloc.o
+
+testbtree: btree test.btree.input1 test.btree.input2 test.btree.input3
+	btree test.btree.input2
+	btree test.btree.input1 test.btree.input2 test.btree.input3	
+
+clean:
+	@rm -rf *.o $(TARGET) $(EXTRA_TARGET) $(TEST_TARGET) $(IRS_FILES) $(TMP_FILES) 
+
+dist:
+	$(top_srcdir)/mkinstalldirs $(distdir) 
+	cp *.[hc] $(distdir)
+	cp *.cpp $(distdir)
+	cp *.in $(distdir)
+
+installdirs: $(top_srcdir)/mkinstalldirs
+	$(top_srcdir)/mkinstalldirs $(bindir) 
+	
+install: $(TARGET) installdirs
+	@$(INSTALL_PROGRAM) $(TARGET) $(bindir)
+
+depend:
+	makedepend -Y -- $(CFLAGS) -- *.cpp *.c
+
+.SUFFIXES:
+.SUFFIXES: .o .cpp .c
+
+.cpp.o:
+	$(CXX) $(CFLAGS) `$(XMLCONFIG_CFLAGS)` -c $<
+
+.c.o:
+	$(CC) $(CFLAGS) `$(XMLCONFIG_CFLAGS)` -c $<
+
+
+# DO NOT DELETE
+
+PorterStemmer.o: PorterStemmer.h
+alloc.o: yase.h config.h alloc.h util.h
+avl3a.o: avl3.h alloc.h avl3int.h
+avl3b.o: avl3.h alloc.h avl3int.h
+bitset.o: bitset.h yase.h config.h util.h
+blockfile.o: blockfile.h yase.h config.h ystdio.h list.h btree.h
+boolsearch.o: boolsearch.h search.h yase.h config.h tokenizer.h collection.h
+boolsearch.o: btree.h list.h blockfile.h ystdio.h postfile.h cbitfile.h
+boolsearch.o: docdb.h util.h bitset.h stem.h
+btree.o: btree.h yase.h config.h list.h blockfile.h ystdio.h util.h
+cbitfile.o: cbitfile.h yase.h config.h ystdio.h
+collection.o: collection.h yase.h config.h btree.h list.h blockfile.h
+collection.o: ystdio.h postfile.h cbitfile.h docdb.h
+docdb.o: docdb.h yase.h config.h ystdio.h
+docweights.o: yase.h config.h makedb.h list.h docdb.h btree.h blockfile.h
+docweights.o: ystdio.h postfile.h cbitfile.h formulas.h collection.h
+docweights.o: docweights.h
+getconfig.o: yase.h config.h getconfig.h properties.h
+getword.o: getword.h yase.h config.h docdb.h makedb.h list.h getconfig.h
+getword.o: xmlparser.h util.h tokenizer.h saxparser.h
+globals.o: yase.h config.h
+htmloutput.o: query.h yase.h config.h avl3.h alloc.h btree.h list.h
+htmloutput.o: blockfile.h ystdio.h postfile.h cbitfile.h docdb.h search.h
+htmloutput.o: tokenizer.h collection.h util.h
+list.o: list.h
+locator.o: locator.h yase.h config.h makedb.h list.h util.h
+makedb.o: yase.h config.h makedb.h list.h avl3.h alloc.h getword.h docdb.h
+makedb.o: locator.h stem.h ystdio.h btree.h blockfile.h postfile.h cbitfile.h
+makedb.o: wgetargs.h formulas.h version.h collection.h docweights.h getopt.h
+postfile.o: postfile.h cbitfile.h yase.h config.h ystdio.h
+properties.o: properties.h yase.h config.h
+query.o: query.h yase.h config.h avl3.h alloc.h btree.h list.h blockfile.h
+query.o: ystdio.h postfile.h cbitfile.h docdb.h search.h tokenizer.h
+query.o: collection.h util.h properties.h
+rankedsearch.o: rankedsearch.h search.h yase.h config.h tokenizer.h
+rankedsearch.o: collection.h btree.h list.h blockfile.h ystdio.h postfile.h
+rankedsearch.o: cbitfile.h docdb.h util.h avl3.h alloc.h formulas.h stem.h
+saxparser.o: saxparser.h yase.h config.h
+search.o: search.h yase.h config.h tokenizer.h collection.h btree.h list.h
+search.o: blockfile.h ystdio.h postfile.h cbitfile.h docdb.h util.h
+search.o: rankedsearch.h avl3.h alloc.h boolsearch.h bitset.h stem.h
+testsearch.o: search.h yase.h config.h tokenizer.h collection.h btree.h
+testsearch.o: list.h blockfile.h ystdio.h postfile.h cbitfile.h docdb.h
+testsearch.o: util.h
+tokenizer.o: tokenizer.h yase.h config.h
+util.o: yase.h config.h alloc.h util.h
+xmlparser.o: yase.h config.h alloc.h list.h xmlparser.h util.h
+yasequery.o: query.h yase.h config.h avl3.h alloc.h btree.h list.h
+yasequery.o: blockfile.h ystdio.h postfile.h cbitfile.h docdb.h search.h
+yasequery.o: tokenizer.h collection.h util.h properties.h
+ystdio.o: yase.h config.h ystdio.h
+getopt.o: getopt.h
+getopt1.o: getopt.h
+htmconvert.o: yase.h config.h
+index.o: btree.h yase.h config.h list.h blockfile.h ystdio.h getopt.h
+indexdump.o: btree.h yase.h config.h list.h blockfile.h ystdio.h
+wvconvert.o: yase.h config.h
