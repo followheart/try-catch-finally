@@ -76,5 +76,6 @@ dt {
 }
 caption {
     color: #0066CC;
-    font-weight: bold 
+    font-weight: bold;
+    caption-side: bottom;
 }
