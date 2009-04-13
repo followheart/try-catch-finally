@@ -1,0 +1,188 @@
+# Build yase
+
+SHELL = /bin/sh
+
+top_srcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH  = @srcdir@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+libdir = @libdir@
+includedir = @includedir@
+distdir = $(top_srcdir)/$(DISTNAME)/src
+
+CC = $(CC)
+CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@
+DEFS = @DEFS@
+
+ifeq ($(USE_LIBXML),1)
+TARGET = yasemakedb yasequery yasewvcnv yasehtmcnv
+else
+TARGET = yasemakedb yasequery
+endif
+
+EXTRA_TARGET = yaseindexdump 
+TEST_TARGET = bitfile cmpress btree
+IRS_FILES = yase.docs yase.postings yase.words yase.btree \
+	yase.docptrs yase.files yase.info
+TMP_FILES = tmp.* test.btree
+# RELEASE_FILES = test docs examples Makefile COPYING README *.h *.c yase.config  test.btree.input1 test.btree.input2 test.btree.input3
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+XMLCONFIG_CMD = $(bindir)/xml2-config
+
+ifeq ($(USE_LIBXML),1)
+	XMLCONFIG_CFLAGS = $(XMLCONFIG_CMD) --cflags
+	XMLCONFIG_LIBS = $(XMLCONFIG_CMD) --libs
+else
+	XMLCONFIG_CFLAGS = 
+	XMLCONFIG_LIBS = 
+endif
+WGET_DIR = $(libdir)
+ifeq ($(USE_WGET),1)
+	WGET_LIBS = -L $(WGET_DIR) -lwget
+else
+	WGET_LIBS =
+endif
+
+default: $(TARGET) 
+all: $(TARGET) $(EXTRA_TARGET) $(TEST_TARGET)
+
+tbitfile.o: bitfile.c bitfile.h yase.h
+	$(CC) -o $@ -c $(CFLAGS) -DTEST_BITFILE $<
+
+tcompress.o: compress.c bitfile.h yase.h compress.h
+	$(CC) -o $@ -c $(CFLAGS) -DTEST_COMPRESS $<
+
+tbtree.o: btree.c btree.h list.h yase.h ystdio.h blockfile.h
+	$(CC) -o $@ -c $(CFLAGS) -DTEST_BTREE $<
+
+talloc.o: alloc.c alloc.h yase.h
+	$(CC) -o $@ -c $(CFLAGS) -DTEST_ALLOC $<
+
+version.h:
+	@echo "static char Yase_version[] = \"$(VERSION)\";" > version.h
+
+yasemakedb.o: makedb.h yase.h list.h bitfile.h ystdio.h avl3.h alloc.h compress.h
+yasemakedb.o: getword.h docdb.h locator.h stem.h btree.h blockfile.h wgetargs.h version.h
+yasemakedb.o: makedb.c
+	$(CC) -o $@ -c $(CFLAGS) -DYASEMAKEDB $<
+
+yasemakedb: yasemakedb.o avl3a.o avl3b.o alloc.o bitfile.o compress.o \
+	locator.o getword.o stem.o btree.o blockfile.o list.o \
+	docdb.o param.o getconfig.o ystdio.o xmlparser.o getopt.o getopt1.o \
+	util.o
+	$(CC) $(LDFLAGS) -o $@ yasemakedb.o avl3a.o avl3b.o alloc.o \
+		bitfile.o compress.o locator.o getword.o stem.o \
+		btree.o blockfile.o list.o docdb.o param.o util.o \
+		getconfig.o ystdio.o xmlparser.o getopt.o getopt1.o \
+		-lm `$(XMLCONFIG_LIBS)` $(WGET_LIBS)
+
+yaseindexdump: indexdump.o btree.o list.o blockfile.o ystdio.o
+	$(CC) $(LDFLAGS) -o $@ indexdump.o btree.o list.o blockfile.o ystdio.o
+
+yasewvcnv: wvconvert.o
+	$(CC) $(LDFLAGS) -o $@ wvconvert.o \
+		`$(XMLCONFIG_LIBS)` 
+
+yasehtmcnv: htmconvert.o
+	$(CC) $(LDFLAGS) -o $@ htmconvert.o \
+		`$(XMLCONFIG_LIBS)` 
+
+yasequery: query.o boolquery.o rankedquery.o btree.o list.o blockfile.o bitfile.o avl3a.o \
+	avl3b.o alloc.o locator.o compress.o queryin.o \
+	queryout.o stem.o docdb.o param.o getconfig.o \
+	ystdio.o makedb.o bitset.o util.o
+	$(CC) $(LDFLAGS) -o $@ query.o btree.o list.o blockfile.o bitfile.o \
+		avl3a.o avl3b.o alloc.o locator.o compress.o \
+		queryin.o queryout.o stem.o docdb.o param.o \
+		getconfig.o ystdio.o makedb.o boolquery.o \
+		util.o rankedquery.o bitset.o -lm 
+
+bitfile: tbitfile.o ystdio.o
+	$(CC) $(LDFLAGS) -o $@ tbitfile.o ystdio.o
+
+cmpress: tcompress.o bitfile.o alloc.o ystdio.o
+	$(CC) $(LDFLAGS) -o $@ tcompress.o bitfile.o alloc.o ystdio.o
+
+btree: tbtree.o list.o ystdio.o blockfile.o 
+	$(CC) $(LDFLAGS) -o $@ tbtree.o list.o ystdio.o blockfile.o
+
+talloc: talloc.o
+	$(CC) $(LDFLAGS) -o $@ talloc.o
+
+testbtree: btree test.btree.input1 test.btree.input2 test.btree.input3
+	btree test.btree.input2
+	btree test.btree.input1 test.btree.input2 test.btree.input3	
+
+clean:
+	@rm -rf *.o $(TARGET) $(EXTRA_TARGET) $(TEST_TARGET) $(IRS_FILES) $(TMP_FILES) 
+
+dist:
+	$(top_srcdir)/mkinstalldirs $(distdir) 
+	cp *.[hc] $(distdir)
+	cp *.in $(distdir)
+
+installdirs: $(top_srcdir)/mkinstalldirs
+	$(top_srcdir)/mkinstalldirs $(bindir) 
+	
+install: $(TARGET) installdirs
+	@$(INSTALL_PROGRAM) $(TARGET) $(bindir)
+
+depend:
+	makedepend -Y -- $(CFLAGS) -- *.c
+
+.SUFFIXES:
+.SUFFIXES: .o .c
+
+.c.o:
+	$(CC) $(CFLAGS) `$(XMLCONFIG_CFLAGS)` -c $<
+
+# DO NOT DELETE
+
+alloc.o: alloc.h
+avl3a.o: avl3.h alloc.h avl3int.h
+avl3b.o: avl3.h alloc.h avl3int.h
+bitfile.o: bitfile.h yase.h config.h ystdio.h
+bitset.o: bitset.h yase.h config.h
+blockfile.o: blockfile.h yase.h config.h ystdio.h list.h btree.h
+boolquery.o: query.h yase.h config.h avl3.h alloc.h btree.h list.h
+boolquery.o: blockfile.h ystdio.h bitfile.h docdb.h bitset.h boolquery.h
+btree.o: btree.h yase.h config.h list.h blockfile.h ystdio.h
+compress.o: compress.h yase.h config.h bitfile.h ystdio.h
+docdb.o: docdb.h yase.h config.h ystdio.h
+getconfig.o: yase.h config.h getconfig.h param.h
+getopt.o: getopt.h
+getopt1.o: getopt.h
+getword.o: getword.h yase.h config.h docdb.h makedb.h list.h bitfile.h
+getword.o: ystdio.h getconfig.h xmlparser.h
+index.o: btree.h yase.h config.h list.h blockfile.h ystdio.h
+indexdump.o: btree.h yase.h config.h list.h blockfile.h ystdio.h
+list.o: list.h
+locator.o: locator.h yase.h config.h makedb.h list.h bitfile.h ystdio.h
+makedb.o: yase.h config.h makedb.h list.h bitfile.h ystdio.h avl3.h alloc.h
+makedb.o: compress.h getword.h docdb.h locator.h stem.h btree.h blockfile.h
+makedb.o: wgetargs.h version.h
+param.o: yase.h config.h param.h
+query.o: query.h yase.h config.h avl3.h alloc.h btree.h list.h blockfile.h
+query.o: ystdio.h bitfile.h docdb.h bitset.h boolquery.h rankedquery.h
+query.o: queryin.h queryout.h makedb.h stem.h getword.h
+query_imp.o: query.h yase.h config.h avl3.h alloc.h btree.h list.h
+query_imp.o: blockfile.h ystdio.h bitfile.h docdb.h bitset.h boolquery.h
+query_imp.o: rankedquery.h queryin.h queryout.h makedb.h stem.h getword.h
+queryin.o: queryin.h yase.h config.h query.h avl3.h alloc.h btree.h list.h
+queryin.o: blockfile.h ystdio.h bitfile.h docdb.h bitset.h queryout.h
+queryout.o: queryout.h yase.h config.h query.h avl3.h alloc.h btree.h list.h
+queryout.o: blockfile.h ystdio.h bitfile.h docdb.h bitset.h
+rankedquery.o: query.h yase.h config.h avl3.h alloc.h btree.h list.h
+rankedquery.o: blockfile.h ystdio.h bitfile.h docdb.h bitset.h rankedquery.h
+rankedquery.o: queryin.h queryout.h makedb.h stem.h getword.h
+util.o: util.h
+xmlparser.o: alloc.h list.h xmlparser.h
+ystdio.o: ystdio.h yase.h config.h
