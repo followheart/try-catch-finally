@@ -1,0 +1,97 @@
+# Microsoft Developer Studio Generated Dependency File, included by test_dm1_threads.mak
+# 19-oct-2002 Renamed to makefile.dep
+
+..\..\test\test_dm1.cpp : \
+	"..\..\test\test_dm1.h"\
+	
+
+..\..\test\test_dm1_event.cpp : \
+	"..\..\include\dm1\common.h"\
+	"..\..\include\dm1\event.h"\
+	"..\..\include\dm1\except.h"\
+	"..\..\include\dm1\list.h"\
+	"..\..\include\dm1\mutex.h"\
+	"..\..\include\dm1\port.h"\
+	"..\..\include\dm1\thread.h"\
+	"..\..\test\test_dm1.h"\
+	
+
+..\..\test\test_dm1_latch.cpp : \
+	"..\..\include\dm1\common.h"\
+	"..\..\include\dm1\event.h"\
+	"..\..\include\dm1\except.h"\
+	"..\..\include\dm1\latch.h"\
+	"..\..\include\dm1\list.h"\
+	"..\..\include\dm1\mutex.h"\
+	"..\..\include\dm1\port.h"\
+	"..\..\include\dm1\thread.h"\
+	"..\..\test\test_dm1.h"\
+	
+
+..\..\test\test_dm1_monitor.cpp : \
+	"..\..\include\dm1\common.h"\
+	"..\..\include\dm1\event.h"\
+	"..\..\include\dm1\except.h"\
+	"..\..\include\dm1\list.h"\
+	"..\..\include\dm1\monitor.h"\
+	"..\..\include\dm1\mutex.h"\
+	"..\..\include\dm1\port.h"\
+	"..\..\include\dm1\thread.h"\
+	
+
+..\..\test\test_dm1_monitor2.cpp : \
+	"..\..\include\dm1\common.h"\
+	"..\..\include\dm1\event.h"\
+	"..\..\include\dm1\except.h"\
+	"..\..\include\dm1\list.h"\
+	"..\..\include\dm1\monitor.h"\
+	"..\..\include\dm1\mutex.h"\
+	"..\..\include\dm1\port.h"\
+	"..\..\include\dm1\thread.h"\
+	
+
+..\..\test\test_dm1_monitor3.cpp : \
+	"..\..\include\dm1\common.h"\
+	"..\..\include\dm1\event.h"\
+	"..\..\include\dm1\except.h"\
+	"..\..\include\dm1\list.h"\
+	"..\..\include\dm1\monitor.h"\
+	"..\..\include\dm1\mutex.h"\
+	"..\..\include\dm1\port.h"\
+	"..\..\include\dm1\thread.h"\
+	
+
+..\..\test\test_dm1_monitor4.cpp : \
+	"..\..\include\dm1\common.h"\
+	"..\..\include\dm1\event.h"\
+	"..\..\include\dm1\except.h"\
+	"..\..\include\dm1\list.h"\
+	"..\..\include\dm1\monitor.h"\
+	"..\..\include\dm1\mutex.h"\
+	"..\..\include\dm1\port.h"\
+	"..\..\include\dm1\thread.h"\
+	
+
+..\..\test\test_dm1_thread.cpp : \
+	"..\..\include\dm1\common.h"\
+	"..\..\include\dm1\event.h"\
+	"..\..\include\dm1\except.h"\
+	"..\..\include\dm1\list.h"\
+	"..\..\include\dm1\mutex.h"\
+	"..\..\include\dm1\port.h"\
+	"..\..\include\dm1\thread.h"\
+	"..\..\test\test_dm1.h"\
+	
+
+..\..\test\test_dm1_threadpool.cpp : \
+	"..\..\include\dm1\common.h"\
+	"..\..\include\dm1\event.h"\
+	"..\..\include\dm1\except.h"\
+	"..\..\include\dm1\list.h"\
+	"..\..\include\dm1\monitor.h"\
+	"..\..\include\dm1\mutex.h"\
+	"..\..\include\dm1\port.h"\
+	"..\..\include\dm1\thread.h"\
+	"..\..\include\dm1\threadpool.h"\
+	"..\..\test\test_dm1.h"\
+	

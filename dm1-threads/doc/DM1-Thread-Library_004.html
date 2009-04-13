@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<LINK rel="stylesheet" type="text/css" href="dmstyle.css">
+<TITLE>DM1 Event</TITLE>
+</HEAD>
+<BODY>
+<H1 id="0"><A href="DM1-Thread-Library-TOC.html#4">DM1 Event</A></H1>
+
+<H2>Purpose</H2>
+
+<P class="MsoNormal">An Event is a thread synchronisation object. One or more threads may wait for an Event to be signalled. When any thread signals an Event, one or more waiting threads are woken up, depending upon the type of event.</P>
+
+<H2>Types of Events</H2>
+
+<P class="MsoNormal">DM1 Events can be of two types: Single or Broadcast. A Single Event causes only one waiting thread to be woken up when the Event is signalled. A Broadcast Event causes all waiting threads to be woken up.</P>
+
+<H2>Operations</H2>
+
+<P class="MsoNormal">DM1 Events support the following operations:</P>
+
+<P class="MsoNormal">Wait - A Thread may wait for an Event to be signalled. Waits 
+  can be of two types: Conditional and Unconditional. A Conditional Wait has a 
+  timeout associated with it. If the Event is not signalled before the timeout 
+  expires, then the Wait returns with the error ETIMEDOUT. An Unconditional Wait 
+  returns only when the Event has been signalled. Note that if the thread is already 
+  in Signalled state, the Wait method returns immediately, and the Event is reset 
+  to Not-Signalled state.</P>
+
+<P class="MsoNormal">Notify - This method sets the Event's state to Signalled. 
+  If the Event is of type Single, one waiting thread is woken up, and the Event 
+  is reset to Not-signalled state atomically. If no thread was waiting, the Event 
+  is left in Signalled state. If the Event is of type Broadcast, all waiting threads 
+  are woken up, and the Event is reset to Not-Signalled state atomically. Even 
+  if there are no waiting threads, the Event is reset to Not-Signalled state.</P>
+
+<H2>Implementation</H2>
+
+<P class="MsoNormal">DM1 Events are mapped to Win32 Events or POSIX Condition Variables. For a higher level synchronisation object, please consider a DM1 Monitor or a DM1 Latch.</P>
+
+<P class="MsoNormal">A DM1 Event is based upon the functionality of the Win32 Event type. The Following table describes the behaviour of DM1 Events in terms of the functionality of Win32 Events.</P>
+
+<TABLE border="1" cellspacing="0" cellpadding="0">
+<TR>
+<TD width="114" valign="top">
+<P class="MsoNormal">DM1 Event Type</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">ManualReset?</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">Signalling Action</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">Signalled state after Action</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">Number of Threads awakened</P>
+</TD>
+</TR>
+
+<TR>
+<TD width="114" valign="top">
+<P class="MsoNormal">Single</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">No</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">SetEvent</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">False if any threads waiting, True otherwise (set to False next time a thread waits for it).</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">Single</P>
+</TD>
+</TR>
+
+<TR>
+<TD width="114" valign="top">
+<P class="MsoNormal">Broadcast</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">Yes</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">PulseEvent</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">False</P>
+</TD>
+<TD width="114" valign="top">
+<P class="MsoNormal">All waiting threads</P>
+</TD>
+</TR>
+</TABLE>
+
+<H2>API</H2>
+
+<PRE>
+ 
+namespace dm1 { 
+ 
+        class Event { 
+                 
+        public: 
+                enum EventType { 
+                        DM1_EVENT_SINGLE = 1, 
+                        DM1_EVENT_BROADCAST = 2 
+                }; 
+ 
+                /** 
+                 * Creates an Event. The Default is create an Event of type Single. 
+                 */ 
+                explicit Event(EventType type = DM1_EVENT_SINGLE); 
+ 
+                /** 
+                 * Destroys the Event. 
+                 */ 
+                ~Event(); 
+ 
+                /** 
+                 * Sets the Event to Non-Signalled state. 
+                 */ 
+                void reset(); 
+ 
+                /** 
+                 * Unconditional wait. Waits for the Event to become Signalled.  
+                 * Wait returns immediately if Event is already in Signalled state;  
+                 * the Event is automatically reset to Not-Signalled state. 
+                 */ 
+                void wait(); 
+ 
+                /** 
+                 * Conditional wait. Waits for upto   secs   seconds for the Event 
+                 * to be signalled. Wait returns immediately if Event is already  
+                 * in Signalled state; the Event is automatically reset to  
+                 * Non-Signalled state. 
+                 */ 
+                int  wait(unsigned secs); 
+ 
+                /** 
+                 * Sets an Event to Signalled state, and wakes up one waiting  
+                 * thread in case of an Event of type Single, or all waiting threads  
+                 * in case of an Event of type Broadcast. 
+                 */ 
+                void notify(); 
+ 
+                static void setDebug(int value) { debug = value; } 
+        }; 
+} 
+</PRE>
+
+<H2>Bugs</H2>
+
+<P class="MsoNormal">A possible problem in the POSIX environment is that spurious wakeups are possible, i.e., a waiting thread might be woken up even though the Event was not signalled. This is due to semantics of the pthread_cond_wait() functions.</P>
+
+<H2>Rationale</H2>
+
+<P class="MsoNormal">The DM1 Event is modelled after the Win32 Event rather than a POSIX Condition Variable. This is because it is difficult to provide the functionality of POSIX Condition Variables on Win32. It might have been possible to use the Win32-Pthreads library on Win32, but I wanted to avoid depending on a third-party library. I wanted to use native functionality, whenever possible, to ensure the best performance.</P>
+
+<P class="MsoNormal">DM1 Events are simplified versions of Win32 Events. Win32 Events are quite complex in behaviour and a common source of errors. Because of simplified semantics, DM1 Events are easier to understand and use.</P>
+
+<H2>Other Implementations</H2>
+
+<H3>Win32 Events</H3>
+
+<P class="MsoNormal">The good implementation is in the ACE library ( <A href="http://www.cs.wustl.edu/~schmidt/ACE.html">http://www.cs.wustl.edu/~schmidt/ACE.html</A> ).</P>
+
+<P class="MsoNormal">The Microsoft Shared Source CLI (ROTOR) also implements a 
+  version; I find the implementation inefficient (most of the inefficiency comes 
+  from supporting Events across Processes).</P>
+
+<P class="MsoNormal">The Intel ORP (Open Runtime Platform) implements Events but 
+  the semantics aren't the same as that of Win32. Only SetEvent is provided.</P>
+
+<P class="MsoNormal">The WINE Project implements Win32 Events.</P>
+
+<P class="MsoNormal">The MONO Project implements Win32 Events.</P>
+
+<H3>POSIX Condition Variables</H3>
+
+<P class="MsoNormal">POSIX Condition Variables are implemented in the <A href="http://sources.redhat.com/pthreads-win32/">PTHREAD-WIN32</A> library. This is a complete implementation.</P>
+
+<P class="MsoNormal">POSIX CVs are implemented in Apache Portable Runtime (APR) project.</P>
+
+<P class="MsoNormal">They are also implemented in (GTK) GLIB.</P>
+
+<P class="MsoNormal">Another implementation is in GCJ. The GCJ implementation appears to be based upon <A href="http://www.cs.wustl.edu/~schmidt/win32-cv-1.html">http://www.cs.wustl.edu/~schmidt/win32-cv-1.html</A> .</P>
+
+<HR>
+Copyright &copy; 2002-2004 by <A href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</A>
+</BODY>
+</HTML>
+

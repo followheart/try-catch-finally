@@ -1,0 +1,141 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<LINK rel="stylesheet" type="text/css" href="dmstyle.css">
+<TITLE>DM1 Threads Library</TITLE>
+</HEAD>
+<BODY>
+<H1 id="0"><A href="DM1-Thread-Library-TOC.html#1">DM1 Threads Library</A></H1>
+
+<H2>Introduction</H2>
+
+<P class="MsoNormal">The DM1 Thread Library is part of the <A href="http://www.mazumdar.demon.co.uk/dm1.html">DM1</A> project. This library was born out of my need to have a portable C++ Thread library that would be simple to use, and would provide all the necessary Threads functionality I required for the DM1 project. Initially, this library was in C, but when I decided to re-write DM1 in C++, I ported the library to C++. During the port, I enhanced the functionality of the Threads library.</P>
+
+<H2>Goals of the DM1 Threads library</H2>
+
+<P class="MsoNormal">The DM1 Threads library aims to be small. It does not try to provide a comprehensive set of functionality, but only what is absolutely essential for a project like DM1. I had the simplicity of the Java Threads package in mind when creating this library.</P>
+
+<P class="MsoNormal">The constructs provided by the DM1 Thread library are:</P>
+
+<ul>
+<li>
+<P class="MsoNormal">Thread objects that represent Operating System threads.</P>
+</li>
+
+<li>
+<P class="MsoNormal">A Mutex is provided as a mechanism for Mutual Exclusion . Mutexes are used to ensure that a piece of code is executed by only one thread at any point in time.</P>
+</li>
+
+<li>
+<P class="MsoNormal">Events are provided as low-level mechanisms for thread synchronisation. Events can be waited for, and signalled to.</P>
+</li>
+
+<li>
+<P class="MsoNormal">A higher level object, that combines the functionality of an Event and a Mutex, is provided. This is the Monitor object. A Monitor can be locked exclusively, just like a Mutex, but it can also be made the object of a Wait operation. The signalling mechanism supports notification of one or more waiting threads.</P>
+</li>
+
+<li>
+<P class="MsoNormal">To enable more efficient locking when both shared and exclusive access to data is required, Latches are provided.</P>
+</li>
+
+<li>
+<P class="MsoNormal">Apart from the Thread synchronisation primitives described above, the library also provides a ThreadPool for the situation when it is inefficient to create a thread exclusively for a particular task, and it is desirable to share a pool of threads for executing multiple tasks.</P>
+</li>
+</ul>
+
+<H2>Implementation Details</H2>
+
+<H3>Choice of Programming Language</H3>
+
+<P class="MsoNormal">The DM1 Threads library is written in C++. Originally, it was written in C, but I decided to port the product to C++ primarily for following reasons:</P>
+
+<OL>
+<LI class="MsoNormal">I wanted to use the namespace facility of C++. I was tired of prefixing every global name with dm1_ .</LI>
+
+<LI class="MsoNormal">I wanted to use the automatic construction and destruction facility in C++. I think this is one of the coolest features of C++. As an aside, I like Java's finally solution better than C++ destructors because with finally, I am able to control the destruction of objects better.</LI>
+</OL>
+
+<P class="MsoNormal">I was apprehensive about using C++, because I find that C++ is a large and complicated language. In order to keep the DM1 Threads code simple, I made some decisions that are sure to be controversial:</P>
+
+<OL>
+  <LI class="MsoNormal">I do not use the C++ standard library, including the STL, 
+    at all. This is because I do not like the code bloat that results from its 
+    use. I also do not like the idea of using the heap for creating simple objects 
+    like strings. I think that C programs are generally more efficient than C++ 
+    programs, because they are much more circumspect about using the heap. One 
+    advantage of not using the C++ standard library is that it makes DM1 Threads 
+    more portable.</LI>
+
+<LI class="MsoNormal">I do not use templates other than in a very small way.</LI>
+
+<LI class="MsoNormal">I use sparingly or not at all, certain features of C++ language, such as multiple inheritance, operator overloading, new style typecast operators, etc. This is because I feel that none of these features are essential (Java does without them nicely).</LI>
+</OL>
+
+<P class="MsoNormal">I think that Java is a better language than C++, but the lack of certain features (efficient array handling, pointers, etc.) makes it unsuitable for a project like DM1. In many ways, I use C++ as a better Java. C# would have been a good choice, but due to its lack of availability on UNIX platforms, I was unable to use it.</P>
+
+<H3>Port Strategy</H3>
+
+<P class="MsoNormal">My goal was to have a library that worked on Win32 as well as POSIX compliant UNIX platform. One way of doing this would have been to use either a pthreads emulation library on Win32, or to emulate Win32 Threads API on UNIX. I decided to do neither. The DM1 Threads package uses native Win32 functionality on Windows, and pthreads functionality on UNIX. It creates abstractions that are neither like Win32, nor like POSIX, but somewhere in between.</P>
+
+<P class="MsoNormal">In order to keep things simple, I limit myself to a subset of functionality available in Win32 and pthreads. For example, Condition Variables are a powerful feature of pthreads, but hard to implement correctly on Win32. Hence, I do not provide Condition variables as a synchronisation mechanism in DM1 Threads library. Instead, I provide the Monitor object that provides a sub-set of the functionality offered by Condition Variables.</P>
+
+<P class="MsoNormal">I also provide a sub-set of the Win32 Event type. The sub-set was carefully chosen to ensure portability and reduced complexity.</P>
+
+<H3>Design Principles</H3>
+
+<P class="MsoNormal">The DM1 Threads library was designed with the following principles in mind:</P>
+
+<P class="MsoNormal">1. Implement the bare minimum that is required. This Threads library does not aim to be a comprehensive threads package.</P>
+
+<P class="MsoNormal">2. Avoid complex algorithms. If a particular construct is hard to implement correctly on all platforms, avoid it.</P>
+
+<P class="MsoNormal">3. Document the library.</P>
+
+<P class="MsoNormal">4. Avoid low level code, such as assembler code to implement Spin locks. Rely on the libraries provided by the Operating System.</P>
+
+<P class="MsoNormal">5. Avoid holding Mutexes beyond function calls. A DM1 Thread library function will not hold any Mutex locks when it returns.</P>
+
+<P class="MsoNormal">6. Avoid using clever C++ techniques wherever possible. (Unfortunately, some cleverness is required to implement the Thread class correctly).</P>
+
+<P class="MsoNormal">7. Avoid dependency on external libraries. The DM1 library only requires the standard C library, apart from native Threads functionality.</P>
+
+<P class="MsoNormal">8. Always report an error as soon as it is discovered.</P>
+
+<P class="MsoNormal">9. Insert debug messages that can be switched on at run-time.</P>
+
+<P class="MsoNormal">10. Do not throw exceptions from destructors because these might be executing as a result of an uncaught exception.</P>
+
+<P class="MsoNormal">11. Never let an error go unreported.</P>
+
+<H3>Problems and Issues</H3>
+
+<P class="MsoNormal">I encountered two main problems when implementing this library.</P>
+
+<P class="MsoNormal">The first problem was that of Error handling. The functionality provided by this library is so essential to the operation of DM1, that if an error occurs, it can be nearly impossible to recover. Perhaps, the best option would be to simply terminate the process. Currently, however, error conditions raise exceptions. When an exception is raised, no guarantees are made about the state of any objects managed by the library.</P>
+
+<P class="MsoNormal">The second problem was the difficulty in implementing a Thread class to encapsulate the Threads functionality. This difficulty arises because of the nature of Threads. A Thread has a life of its own, quite apart from the C++ Thread object that represents it. There is a possibility that the Thread object will stop representing the true state of an operating system thread. For example, the C++ object may be destroyed before the Thread terminates. I avoid this situation by implementing pseudo garbage collection of Thread objects. You should never deallocate a Thread object. The system will automatically deallocate it after the associated Operating System Thread finishes.</P>
+
+<H3>Why another Threads library?</H3>
+
+<P class="MsoNormal">The main reason is that it is the best way to learn. I started the DM1 project mainly in order to learn how a DBMS works. If I use third-party libraries, I could save some time, but an important objective of the DM1 project would remain unfulfilled.</P>
+
+<P class="MsoNormal">If you are interested in a more general purpose library, 
+  please have a look at Zthreads. I came to know about this library after I had 
+  completed a large part of the work on DM1 Threads.</P>
+<h2 class="MsoNormal">How to build DM1 Threads library</h2>
+<p class="MsoNormal">I have tested the library on Win32 and on Linux (SUSE 8.1). 
+  The build procedure is as follows:</p>
+<h3 class="MsoNormal">Linux</h3>
+<p class="MsoNormal">On Linux, you can simply execute <code>make</code> and it 
+  should build the library, and the test programs. To run the test programs, you 
+  will need to set <code>LD_LIBRARY_PATH</code> appropriately.</p>
+<h3 class="MsoNormal">Windows</h3>
+<p class="MsoNormal">To build DM1 Threads on Windows, you need MS Visual C++ 6.0 
+  or above. The VC++ 6.0 Workspace file is in the <code>win32-build</code> subdirectory. The <code>README.txt</code>
+  file in the win32-build sub-directory provides more details on the Win32 build process.</p>
+
+<HR>
+Copyright &copy; 2002-2004 by <A href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</A>
+</BODY>
+</HTML>
+

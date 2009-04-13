@@ -1,0 +1,33 @@
+Microsoft Visual Studio Solution File, Format Version 7.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dm1_threads", "dm1_threads\dm1_threads.vcproj", "{05D859C9-45B4-4E4A-B207-16A4A5875D71}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_dm1_threads", "test_dm1_threads\test_dm1_threads.vcproj", "{E6288B5D-4574-4B9A-8DF9-6B92E27F0B70}"
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		ConfigName.0 = Debug
+		ConfigName.1 = PThread_Debug
+		ConfigName.2 = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+		{E6288B5D-4574-4B9A-8DF9-6B92E27F0B70}.0 = {05D859C9-45B4-4E4A-B207-16A4A5875D71}
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{05D859C9-45B4-4E4A-B207-16A4A5875D71}.Debug.ActiveCfg = Debug|Win32
+		{05D859C9-45B4-4E4A-B207-16A4A5875D71}.Debug.Build.0 = Debug|Win32
+		{05D859C9-45B4-4E4A-B207-16A4A5875D71}.PThread_Debug.ActiveCfg = PThread_Debug|Win32
+		{05D859C9-45B4-4E4A-B207-16A4A5875D71}.PThread_Debug.Build.0 = PThread_Debug|Win32
+		{05D859C9-45B4-4E4A-B207-16A4A5875D71}.Release.ActiveCfg = Release|Win32
+		{05D859C9-45B4-4E4A-B207-16A4A5875D71}.Release.Build.0 = Release|Win32
+		{E6288B5D-4574-4B9A-8DF9-6B92E27F0B70}.Debug.ActiveCfg = Debug|Win32
+		{E6288B5D-4574-4B9A-8DF9-6B92E27F0B70}.Debug.Build.0 = Debug|Win32
+		{E6288B5D-4574-4B9A-8DF9-6B92E27F0B70}.PThread_Debug.ActiveCfg = PThread_Debug|Win32
+		{E6288B5D-4574-4B9A-8DF9-6B92E27F0B70}.PThread_Debug.Build.0 = PThread_Debug|Win32
+		{E6288B5D-4574-4B9A-8DF9-6B92E27F0B70}.Release.ActiveCfg = Release|Win32
+		{E6288B5D-4574-4B9A-8DF9-6B92E27F0B70}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
