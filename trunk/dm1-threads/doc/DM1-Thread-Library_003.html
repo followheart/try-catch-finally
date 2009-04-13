@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<LINK rel="stylesheet" type="text/css" href="dmstyle.css">
+<TITLE>DM1 Mutex</TITLE>
+</HEAD>
+<BODY>
+<H1 id="0"><A href="DM1-Thread-Library-TOC.html#3">DM1 Mutex</A></H1>
+
+<H2>Purpose</H2>
+
+<P class="MsoNormal">A DM1 Mutex enables a section of code to be executed by one 
+  thread only at given a point in time. The Mutex is one of the fundamental thread 
+  synchronisation primitives supported by an Operating System.</P>
+<P class="MsoNormal">An AutoMutex class is provided. This is a helper class designed 
+  to ensure that mutexes are released automatically when the program flow is broken 
+  because of an Exception being thrown. The destructor of an AutoMutex object 
+  automatically destroys the related Mutex object during stack unwinding.</P>
+
+<H2>Operations</H2>
+
+<P class="MsoNormal">There are only two operations supported by the Mutex object.</P>
+
+<P class="MsoNormal">Lock - This blocks the calling thread until the Mutex is 
+  granted to the thread. Only one thread can own the Mutex at any point in time.</P>
+
+<P class="MsoNormal">Unlock - Releases the Mutex and makes it available to other 
+  threads.</P>
+
+<H2>Implementation</H2>
+
+<P class="MsoNormal">On Win32, a DM1 Mutex is implemented as a CRITICAL_SECTION. Since DM1 does not support inter-process synchronisation, it does not require the greater flexibility and overhead of a Win32 Mutex.</P>
+
+<P class="MsoNormal">On UNIX, a DM1 Mutex is implemented as a pthread_mutex object.</P>
+
+<H2>API</H2>
+
+<PRE>
+ 
+namespace dm1 { 
+ 
+        class Mutex { 
+ 
+        public: 
+                /** 
+                 * Creates a Mutex object. 
+                 */ 
+                explicit Mutex(); 
+ 
+                /** 
+                 * Destroys the Mutex object. 
+                 */ 
+                ~Mutex(); 
+ 
+                /** 
+                 * Acquires the Mutex lock. Calling thread is 
+                 * blocked until the Mutex lock is granted. 
+                 * Recursive calls are not supported. 
+                 */ 
+                void lock(); 
+ 
+                /** 
+                 * Unlocks the Mutex object. Caller must hold the  
+                 * lock before calling unlock. 
+                 */ 
+                void unlock(); 
+        }; 
+ 
+        class AutoMutex { 
+        public: 
+                explicit AutoMutex(Mutex *mutex) ; 
+                ~AutoMutex() ; 
+                void lock() ; 
+                void unlock() ; 
+        }; 
+} 
+</PRE>
+
+<HR>
+Copyright &copy; 2002-2004 by <A href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</A>
+</BODY>
+</HTML>
+

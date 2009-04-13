@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<LINK rel="stylesheet" type="text/css" href="dmstyle.css">
+<TITLE>DM1 Latch</TITLE>
+</HEAD>
+<BODY>
+<H1 id="0"><A href="DM1-Thread-Library-TOC.html#6">DM1 Latch</A></H1>
+
+<H2>Purpose</H2>
+
+<P class="MsoNormal">A Latch is another kind of thread synchronisation object. Unlike Mutexes, which support only Exclusive locks, Latches can be locked in Shared as well as Exclusive modes. Latch requests are granted in FIFO order.</P>
+
+<H2>Operations</H2>
+
+<P class="MsoNormal">The following operations on latches are permitted:</P>
+
+<P class="MsoNormal">Acquire - A latch can be acquired in either Exclusive or 
+  Shared mode. Only one thread may hold the latch in Exclusive mode at any point 
+  in time. When requesting a latch, the caller may choose to not wait in which 
+  case, the acquire method returns failure if the latch cannot be acquired immediately. 
+  A latch may be acquired more than once by the same thread; however, it must 
+  be released an equal number of times.</P>
+
+<P class="MsoNormal">Release - Releasing a latch makes it available to other threads.</P>
+
+<H2>Implementation</H2>
+
+<P class="MsoNormal">The latch object contains the following:</P>
+
+<P class="MsoNormal">Mutex - a Mutex to protect access to the latch.</P>
+
+<P class="MsoNormal">Holder - Current holder (thread) of the latch only maintained 
+  for exclusive locks.</P>
+
+<P class="MsoNormal">Mode - Shared or Exclusive mode.</P>
+
+<P class="MsoNormal">Count - Number of times the Latch has been acquired.</P>
+
+<P class="MsoNormal">WaitQ - Queue of threads awaiting the latch.</P>
+
+<P class="MsoNormal">Acquire - When a request for a latch is made, it is immediately 
+  granted if no other thread is currently holding the latch. If there is a latch 
+  holder, then the action taken depends upon the mode in which the latch is held, 
+  the requested latch mode, and the identity of the requester.</P>
+
+<P class="MsoNormal">If an Exclusive lock was requested, and the requester is the same as the latch holder, then latch count is incremented, and success returned to the caller.</P>
+
+<P class="MsoNormal">If, the requested mode was Shared, and the latch is held in Shared mode, and there are no waiting threads, then also, latch count is incremented and success returned. The check for waiting threads ensures that shared latches are not granted if there are pending exclusive latch requests.</P>
+
+<P class="MsoNormal">If neither of above is true, and no wait has been specified, failure is returned to the caller. If the requester, however, is willing to wait, then the latch request is appended to the WaitQ, and the requester goes to sleep, waiting for the latch to be granted to it. When the latch is eventually granted, the requester is woken up and success is returned to the caller.</P>
+
+<P class="MsoNormal">Note that the identity of the latch holder is only retained for Exclusive latches. This is because, there could be several latch holders in Shared mode, and for reasons of efficiency, we want to avoid allocating memory to hold a list of latch holders.</P>
+
+<P class="MsoNormal">Release - Latch count is decremented, and if it becomes zero, 
+  the latch can be granted to one or more eligible waiting threads. If the first 
+  thread is waiting for an Exclusive access to the latch, then only this thread 
+  can be granted the lock. If the first thread is waiting for Shared access to 
+  the latch, then all subsequent threads that have requested the latch in Shared 
+  mode can also be granted the latch. Threads that have been granted the latch 
+  are woken up by the thread that is releasing the latch.</P>
+
+<H2>Usage</H2>
+
+<P class="MsoNormal">Latches are similar to Mutexes, but permit higher concurrency when there is a mix of Shared/Exclusive access to data.</P>
+
+<H2>API</H2>
+
+<PRE>
+ 
+namespace dm1 { 
+ 
+        class Latch { 
+ 
+        public: 
+                enum LatchMode { 
+                        DM1_LATCH_FREE = 0, 
+                        DM1_LATCH_S = 1, 
+                        DM1_LATCH_X = 2, 
+                        DM1_LATCH_GRANTED = 3 
+                }; 
+ 
+                enum LatchWait { 
+                        DM1_LATCH_WAIT = true, 
+                        DM1_LATCH_NOWAIT = false 
+                }; 
+ 
+                /** 
+                 * Create a Latch. Latches can be given 
+                 * names. 
+                 */ 
+                explicit Latch(const char *name); 
+ 
+                /** 
+                 * Destroys the Latch. 
+                 */ 
+                virtual ~Latch(); 
+         
+                /** 
+                 * Attempts to acquire a Latch is the mode 
+                 * requested. Will wait if wait mode is  
+                 * set to DM1_LATCH_WAIT. Returns false if 
+                 * Latch is not available and DM1_LATCH_NOWAIT 
+                 * has been specified. 
+                 */ 
+                bool acquire( 
+                        LatchMode mode, 
+                        LatchWait wait); 
+ 
+                /** 
+                 * Releases the latch. If the Latch was 
+                 * acquired more than once, it must be released 
+                 * an equal number of times. 
+                 */ 
+                void release(); 
+ 
+                static void reportStatistics(FILE *fp = stderr); 
+                static void setDebug(int value) { debug = value; } 
+        }; 
+ 
+} 
+</PRE>
+
+<HR>
+Copyright &copy; 2002-2004 by <A href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</A>
+</BODY>
+</HTML>
+

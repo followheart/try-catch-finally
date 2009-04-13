@@ -1,0 +1,367 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<LINK rel="stylesheet" type="text/css" href="dmstyle.css">
+<TITLE>DM1 Thread</TITLE>
+</HEAD>
+<BODY>
+<H1 id="0"><A href="DM1-Thread-Library-TOC.html#2">DM1 Thread</A></H1>
+
+<H2>Purpose</H2>
+
+<P class="MsoNormal">The DM1 Thread object represents a native Operating System 
+  thread. It provides a portable and simplified wrapper around Operating System 
+  thread functionality. In addition to that, it supports rudimentary inter-thread 
+  communication via signals.</P>
+
+<H2>Usage</H2>
+
+<P class="MsoNormal">A DM1 Thread is instantiated using the ThreadFactory class. This is so that a Thread object can be automatically garbage collected once the thread has completed execution. When creating a Thread, you must provide a new instance of a Runnable object. The Runnable object should implement the run method which will form the main body of logic executed by the thread. The Runnable object must be allocated on the heap, and will be automatically deleted when the associated Thread object is garbage collected.</P>
+
+<H2>The Runnable Object</H2>
+
+<P class="MsoNormal">A DM1 Thread executes the code implemented by a Runnable object. You should implement your own Runnable object by deriving from the Runnable class. The only method you will normally need to implement is the run method. Sometimes, you may choose to create a Thread object within the constructor of the Runnable object. Please refer to examples 1 and 2 for an illustration of these two techniques.</P>
+
+<H2>The ThreadFactory Class</H2>
+
+<P class="MsoNormal">The ThreadFactory class provides a static method for creating new instances of the Thread class. The createThread method requires the following parameters:</P>
+
+<P class="MsoNormal">A Runnable object allocated on the heap. You must not use the same Runnable object in more than one thread. You must not delete the Runnable object because it will be automatically deleted when the Thread finishes.</P>
+
+<P class="MsoNormal">A name for the Thread. This is an optional parameter.</P>
+
+<P class="MsoNormal">A Boolean value to indicate that the Thread should be created as a Daemon. A Daemon Thread need not be waited for. Threads that are not created as Daemons need to be waited for by joining with them. This parameter is optional, and its default value is false (i.e., Non Daemon).</P>
+
+<P class="MsoNormal">Please see examples 3 and 4 that illustrate how to create Daemon/Non-daemon threads.</P>
+
+<H2>The Thread Object</H2>
+
+<P class="MsoNormal">Each Thread in the system is represented by a Thread object. Thread objects are created by the ThreadFactory class as described above.</P>
+
+<P class="MsoNormal">Following operations are permitted on Thread objects:</P>
+
+<H3>Permitted Operations</H3>
+
+<P class="MsoNormal">Start - This creates an Operating System thread and executes 
+  the code represented by the run method of the Runnable object associated with 
+  that thread.</P>
+
+<P class="MsoNormal">Wait - This causes the thread to go to sleep, waiting for 
+  a Signal. Waits can be of two types: Conditional and Unconditional. A Conditional 
+  Wait has a timeout associated with it. If the thread is not signalled before 
+  the timeout expires, then the Wait returns with the error ETIMEDOUT. An Unconditional 
+  Wait returns only when the thread has been signalled.</P>
+
+<P class="MsoNormal">Notify - This sends a Signal to a waiting Thread.</P>
+
+<P class="MsoNormal">Exit - This terminates the thread.</P>
+
+<P class="MsoNormal">Join - Joining a thread causes the calling thread to block 
+  until the joined thread completes. All Non-Daemon threads must be joined, because 
+  until the thread is joined, its resources are not cleaned up.</P>
+
+<H2>Implementation</H2>
+
+<P class="MsoNormal">Each Operating System thread is represented by a DM1 Thread 
+  object. The Thread object contains a DM1 Event object to enable the Wait and 
+  Notify functions. A Thread object is linkable; in fact, a Thread object contains 
+  two sets of links. First set allows the thread to be attached to the wait queue 
+  of a DM1 Latch or Monitor object. The second set of links allows the thread 
+  to be linked to the list of threads maintained by the ThreadFactory class.</P>
+
+<P class="MsoNormal">Creating a thread object does not automatically instantiate an Operating System thread. To do that, you need to invoke the Start method.</P>
+
+<P class="MsoNormal">Thread objects must be created using the createThread method provided by the ThreadFactory class. When creating a Thread, a new instance of a Runnable object must be supplied.</P>
+
+<P class="MsoNormal">The Wait and Notify methods are implemented using the Event object within the Thread object.</P>
+
+<P class="MsoNormal">A special Thread object is created at start-up to represent the main thread. I make use of the C++ facility for instantiating static objects to ensure that this object is created before main() function is executed.</P>
+
+<P class="MsoNormal">The Current Thread object can be retrieved at any time by looking up a pre-defined Thread Local Storage Key. This key is allocated at start-up, before main() is called. When a Thread starts executing, it updates the appropriate Thread Local Storage entry.</P>
+
+<P class="MsoNormal">The ThreadFactory class maintains a linked list of allocated Threads. Every time a new Thread is created, it checks for Threads that have completed, and garbage collects them.</P>
+
+<P class="MsoNormal">At system shutdown, the ThreadFactory::shutdown method is invoked. This method waits for any Daemon Threads to complete, and then garbage collects all completed threads. It is an error if after the garbage collection there are any threads left on the system (this can happen if the application forgets to join with Non-Daemon threads).</P>
+
+<H2>API</H2>
+
+<PRE>
+ 
+namespace dm1 { 
+ 
+        class Runnable { 
+        public: 
+                Runnable() ; 
+                virtual ~Runnable() ; 
+ 
+                /**  
+                 * Derived classes must implement this method. This is 
+                 * the main body of the thread. 
+                 */ 
+                virtual void run() ; 
+                 
+                /** 
+                 * Sets an arbitrary argument for the thread. 
+                 */ 
+                void *getArg() const; 
+ 
+                /** 
+                 * Returns the thread argument. 
+                 */ 
+                void setArg(void *arg) ; 
+ 
+                /** 
+                 * Each Runnable object has an associated Thread that 
+                 * owns it. This method returns the Thread owning 
+                 * the object. 
+                 */ 
+                Thread *getThread() const; 
+ 
+                /**  
+                 * Unconditional wait. Puts the owning thread to sleep  
+                 * until another thread signals it. 
+                 */ 
+                void wait(); 
+ 
+                /** 
+                 * Conditional wait. If the thread is not signalled 
+                 * before the timeout expires, then this method returns 
+                 * ETIMEDOUT. 
+                 */ 
+                int  wait(unsigned secs); 
+ 
+                /** 
+                 * Terminates the owning thread. 
+                 */ 
+                void exit(); 
+ 
+                /** 
+                 * Returns the owning thread  s name. 
+                 */ 
+                const char *getName() const; 
+        }; 
+ 
+        class Thread { 
+        public: 
+                virtual ~Thread(); 
+ 
+                /**  
+                 * Unconditional wait. Puts the thread to sleep until  
+                 * another thread signals it. 
+                 */ 
+                void wait(); 
+ 
+                /** 
+                 * Conditional wait. If the thread is not signalled  
+                 * before the timeout expires, then this method returns  
+                 * ETIMEDOUT. 
+                 */ 
+                int  wait(unsigned secs); 
+ 
+                /** 
+                 * Terminates the thread. 
+                 */ 
+                void exit(); 
+ 
+                /** 
+                 * Blocks the caller until the thread being joined  
+                 * terminates.  
+                 */ 
+                void join(); 
+ 
+                /** 
+                 * Creates an Operating system thread and executes the  
+                 * run() method of the Runnable object. 
+                 */ 
+                void start(); 
+ 
+                /** 
+                 * Returns the thread  s name. 
+                 */ 
+                const char *getName() const; 
+ 
+                /** 
+                 * Returns the Runnable object associated with the  
+                 * Thread. 
+                 */ 
+                Runnable *getRunnable() const ; 
+                 
+                /** 
+                 * Sets an arbitrary argument for the thread. 
+                 */ 
+                void setArg(void *arg) ; 
+ 
+                /** 
+                 * Returns the thread argument. 
+                 */ 
+                void *getArg() ; 
+ 
+                /** 
+                 * Sends a signal to Thread   other  . 
+                 */ 
+                static void notify(Thread *other); 
+ 
+                /**  
+                 * Returns the Thread object that represents the current  
+                 * thread. 
+                 */ 
+                static Thread *getCurrentThread(); 
+ 
+                /** 
+                 * Returns the Thread object that represents the main  
+                 * thread. 
+                 */ 
+                static Thread *getMainThread() ; 
+ 
+                /** 
+                 * Enables debug messages. 
+                 */ 
+                static void setDebug(int value) ; 
+        }; 
+ 
+        class ThreadFactory { 
+        public: 
+                static void shutdown(); 
+ 
+                /**  
+                 * Creates a new Thread instance. 
+                 */ 
+                static Thread *createThread(Runnable *toRun,  
+                        const char *name = "UnNamed Thread",  
+                        bool isDaemon = false); 
+ 
+                /** 
+                 * Enables debug messages. 
+                 */ 
+                static void setDebug(int value) ; 
+        }; 
+ 
+} 
+</PRE>
+<H2>Examples</H2>
+
+<H3>Example 1</H3>
+
+<P class="MsoNormal">This example shows how to create a Runnable object.</P>
+
+<PRE>
+ 
+using namespace dm1; 
+class HelloWorld : public Runnable { 
+public: 
+      void run() { 
+            fprintf(stdout, &quot;Hello World !\n&quot; ); 
+      } 
+}; 
+</PRE>
+
+<H3>Example 2</H3>
+
+<P class="MsoNormal">This example enhances above class to allow a Thread object to be created automatically within the constructor of the Runnable object.</P>
+
+<PRE>
+ 
+using namespace dm1; 
+class HelloWorld : public Runnable { 
+public: 
+      HelloWorld { 
+            Thread *t = ThreadFactory::createThread(this, 
+                                  &quot;HelloWorld&quot;, true); 
+            t-&gt;start(); 
+      } 
+      void run() { 
+            fprintf(stdout, &quot;Hello World !\n&quot;); 
+      } 
+}; 
+  
+int main() { 
+      new HelloWorld(); 
+      return 0; 
+} 
+</PRE>
+
+<H3>Example 3</H3>
+
+<P class="MsoNormal">This example shows how the HelloWorld class as shown in Example 1, may be instantiated as a Daemon thread.</P>
+
+<PRE>
+ 
+int main() { 
+      Thread *t = ThreadFactory::createThread(new HelloWorld(),  
+              &quot;HelloWorld&quot; , true /* Daemon */ ); 
+      t-&gt;start(); 
+      /* No need to join */ 
+      return 0; 
+} 
+</PRE>
+
+<H3>Example 4</H3>
+
+<P class="MsoNormal">This example shows how the HelloWorld class as shown in Example 1, may be instantiated as a Non-Daemon thread.</P>
+
+<PRE>
+ 
+int main() { 
+      Thread *t = ThreadFactory::createThread(new HelloWorld(),  
+              &quot;HelloWorld&quot;, false /* Non-Daemon */ ); 
+      t-&gt;start(); 
+      t-&gt;join();/* Must join */ 
+      return 0; 
+} 
+</PRE>
+
+<H3>Example 5</H3>
+
+<P class="MsoNormal">The next example shows one thread waiting for a signal, and another thread sending a signal to the waiting thread.</P>
+
+<PRE>
+ 
+      using namespace dm1; 
+  
+      class Sleeper : public Runnable { 
+      public: 
+            void run(); 
+      }; 
+  
+      void Sleeper::run() 
+      { 
+            fprintf(stderr, "%s: Sleeping\n", getName()); 
+            wait(); 
+            fprintf(stderr, "%s: Woken up !\n", getName()); 
+      } 
+  
+      class Waker : public Runnable { 
+      public: 
+            void run(); 
+      }; 
+  
+      void Waker::run() 
+      { 
+            Thread *other = (Thread *) getArg(); 
+  
+            wait(5); 
+            fprintf(stderr, "%s: Waking up %s\n", getName(), 
+                  other-&gt;getName()); 
+            Thread::notify(other); 
+            exit(); 
+      } 
+  
+      int main() 
+      { 
+            Thread *t1 = ThreadFactory::createThread(new Sleeper(), "sleeper", true); 
+            Thread *t2 = ThreadFactory::createThread(new Waker(), "waker", true); 
+  
+            t2-&gt;setArg((void *)t1); 
+  
+            t1-&gt;start(); 
+            t2-&gt;start(); 
+  
+            return 0; 
+      }      
+</PRE>
+
+<HR>
+Copyright &copy; 2002-2004 by <A href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</A>
+</BODY>
+</HTML>
+

@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<LINK rel="stylesheet" type="text/css" href="dmstyle.css">
+<TITLE>DM1 Monitor</TITLE>
+</HEAD>
+<BODY>
+<H1 id="0"><A href="DM1-Thread-Library-TOC.html#5">DM1 Monitor</A></H1>
+
+<H2>Purpose</H2>
+
+<P class="MsoNormal">The DM1 Monitor is a thread synchronisation object similar to Microsoft .Net Monitor. It provides the combined functionality of a Mutex (mutual exclusion) and an Event (signal and wait) in one object.</P>
+
+<H2>Permitted Operations</H2>
+
+<P class="MsoNormal">Lock - A thread may request a lock on a Monitor object. The 
+  requesting thread blocks if the lock cannot be granted. The Lock request can 
+  be nested, i.e., a Thread may request a Lock while holding it already. However, 
+  each Lock request must have a corresponding Unlock request for the Monitor to 
+  be eventually released.</P>
+
+<P class="MsoNormal">Unlock - The thread that owns the Monitor may unlock the 
+  Monitor, thereby making it available to other waiting threads. Unlock must be 
+  called as many times as Lock was invoked.</P>
+
+<P class="MsoNormal">Wait - A thread that owns a lock on the Monitor may wait 
+  for a Signal by invoking one of the Wait functions. Wait relinquishes the lock 
+  before going to sleep, and re-acquires the lock before returning to the caller. 
+  Wait can be unconditional or conditional. A conditional wait allows a timeout 
+  parameter to be specified if the condition is not signalled before the timeout 
+  expires, the Wait returns false.</P>
+
+<P class="MsoNormal">Notify - Sets the next waiting thread on a Monitor object 
+  to Signalled state. If the Monitor lock is not being held, it is granted to 
+  the oldest signalled thread. </P>
+<P class="MsoNormal">NotifyAll - Sets all threads waiting on a Monitor object 
+  to Signalled state. If the Monitor lock is not being held, it is granted to 
+  the oldest signalled thread.</P>
+
+<H2>Implementation</H2>
+
+<P class="MsoNormal">A Monitor object keeps references to following:</P>
+
+<P class="MsoNormal">Mutex - A Mutex protects access to it.</P>
+
+<P class="MsoNormal">Holder - Reference to the thread that holds a lock on the Monitor object.</P>
+
+<P class="MsoNormal">ReadyQ - A queue of threads eligible to acquire the lock.</P>
+
+<P class="MsoNormal">WaitQ - A queue of threads waiting to be signalled.</P>
+
+<P class="MsoNormal">Lock - When a thread requests a Lock on the Monitor object, 
+  one of three things can happen. If no one else is holding the lock (Holder is 
+  null), then the lock is immediately granted and the requesting thread becomes 
+  the lock holder. If the lock is already held by the requesting thread, then 
+  the lock reference count is incremented. If some other thread is holding the 
+  lock, then the requesting thread is added to the ReadyQ, and put to sleep. It 
+  is woken up when the lock is granted, and control returns back to the caller.</P>
+
+<P class="MsoNormal">Unlock - If the lock reference count is greater than 1, it 
+  is decremented, and the Monitor is not unlocked. Otherwise, the Monitor lock 
+  is granted to the first thread on the ReadyQ. This thread then becomes the lock 
+  holder, and is removed from the ReadyQ.</P>
+
+<P class="MsoNormal">Wait - The calling thread should have already locked the 
+  Monitor object before invoking the Wait function. Wait puts the calling thread 
+  on the WaitQ (with state set to Non-Signalled), and then releases the lock. 
+  The Lock is granted to the first thread on the ReadyQ. The calling thread goes 
+  to sleep until it is Signalled and subsequently woken up by another thread. 
+  By the time the thread is woken up, it should have been set to Signalled state, 
+  and it should have been granted the Lock. Thus, when the control is returned 
+  back to the caller, the lock has been re-acquired.</P>
+
+<P class="MsoNormal">Conditional Wait - A Conditional Wait is similar to a normal 
+  Wait, but has a timeout associated with it. The calling thread should have already 
+  locked the Monitor object before invoking the Conditional Wait function. Conditional 
+  Wait puts the calling thread at the end of the WaitQ (with state set to Non-Signalled), 
+  and then releases the lock. The Lock is granted to the first thread on the ReadyQ. 
+  The calling thread goes to sleep until it is either Signalled and granted the 
+  lock, or the sleep times out. In case of the timeout expiring, the thread must 
+  re-acquire the lock before returning to the caller. To enable this, it is removed 
+  from the WaitQ, and added to the ReadyQ. It then goes to sleep unconditionally, 
+  waiting for the lock to be granted. When the lock is granted, it returns to 
+  the caller with a return value of false , indicating that the wait timed out 
+  while waiting for a Signal.</P>
+
+<P class="MsoNormal">Notify - The caller does not need to lock the Monitor object. 
+  The first thread on the WaitQ is set to Signalled state, and moved to the end 
+  of ReadyQ. If no one is holding the lock (holder is null), then the first thread 
+  on ReadyQ is granted the lock. Notify has no effect if there isn t any waiting 
+  thread.</P>
+
+<P class="MsoNormal">NotifyAll - The caller does not need to lock the Monitor object. All threads on WaitQ are set to Signalled state and moved to the ReadyQ. If no one is holding the lock (Holder is null), then the first thread on ReadyQ is granted the lock. NotifyAll has no effect if there aren t any waiting threads.</P>
+
+<H2>Features of a Monitor object</H2>
+
+<P class="MsoNormal">Since a Monitor lock is exclusive, Monitor objects can be used as a mechanism for Mutual Exclusion, in the same way as Mutexes. However, Mutexes are more efficient compared with Monitor objects. If Mutual Exclusion is all that you need, Mutexes are a better choice. If however, you need the ability to wait for a Monitor and the ability to signal other threads, then Monitor objects are a better choice.</P>
+
+<P class="MsoNormal">Locks on a Monitor object are granted in FIFO order.</P>
+
+<P class="MsoNormal">When a thread waits on a Monitor object, it temporarily relinquishes the lock on the Monitor object. However, when control is returned to the thread, it is guaranteed that the lock would have been re-acquired.</P>
+
+<P class="MsoNormal">Monitor objects and Events share some features. However, Events are more closely aligned to native Thread functionality of the Operating System. Monitors are a higher level implementation, and provide more predictable scheduling (locks are granted in FIFO order). While a DM1 Event supports notifying either one thread or all threads, a Monitor supports both types of notification. Finally, a Monitor object can be used for mutual exclusion, i.e., hence it is better suited for applications that require both Mutex and Event functionality in one object.</P>
+
+<H2>API</H2>
+
+<PRE>
+ 
+namespace dm1 { 
+ 
+        class Monitor { 
+ 
+        public: 
+                /** 
+                 * Creates a Monitor Object. 
+                 */ 
+                explicit Monitor(); 
+ 
+                /** 
+                 * Destroys a Monitor object. 
+                 */ 
+                ~Monitor(); 
+ 
+                /** 
+                 * Requests a lock on the Monitor object.  
+                 * Will block if Lock is not available. 
+                 */ 
+                void lock(); 
+		inline void enter() { lock(); }
+
+                /**
+                 * Requests a lock on the Monitor object.
+                 * Will return false if Lock is not available.
+                 * Returns true if lock was acquired.
+                 */
+		bool tryLock();
+		inline bool tryEnter() { return tryLock(); }
+
+                /**  
+                 * Requester must be a holder of the lock.  
+                 * If the Unlock succeeds, the lock is  
+                 * granted to the oldest waiting thread  
+                 * on the ReadyQ. 
+                 */ 
+                void unlock(); 
+		inline void exit() { unlock(); }
+
+                /** 
+                 * Requester must be a holder of the lock.  
+                 * The lock is released and requester put  
+                 * to sleep until the Monitor is signalled.  
+                 * Lock is re-acquired before control  
+                 * returns to the caller. 
+                 */ 
+                void wait(); 
+ 
+                /** 
+                 * Requester must be a holder of the lock.  
+                 * The lock is released and requester put  
+                 * to sleep until the Monitor is signalled  
+                 * or the timeout expires. Lock is re-acquired  
+                 * before control returns to the caller.  
+                 */ 
+                bool wait(unsigned secs); 
+ 
+                /** 
+                 * Signals and wakes up one thread waiting on  
+                 * the Monitor object. The thread woken up may  
+                 * not be the one signalled. 
+                 */ 
+                void notify(); 
+ 
+                /** 
+                 * Signalls all waiting threads and wakes up  
+                 * one thread. 
+                 */ 
+                void notifyAll(); 
+ 
+                static void setDebug(int value) { debug = value; } 
+        }; 
+ 
+} 
+</PRE>
+
+<HR>
+Copyright &copy; 2002-2004 by <A href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</A>
+</BODY>
+</HTML>
+

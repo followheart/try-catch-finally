@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<LINK rel="stylesheet" type="text/css" href="dmstyle.css">
+<TITLE>DM1 ThreadPool</TITLE>
+</HEAD>
+<BODY>
+<H1 id="0"><A href="DM1-Thread-Library-TOC.html#7">DM1 ThreadPool</A></H1>
+
+<H2>Purpose</H2>
+
+<P class="MsoNormal">Often there is a need to run several tasks concurrently in such a way that there is optimum use of the operating system resources. If each task were to be implemented as a new thread, then there would be a number of inefficiencies:</P>
+
+<UL>
+<LI class="MsoNormal">As tasks started and finished, threads would have to be created and destroyed. If the tasks completed quickly, the rate at which threads must be started would be proportional to the rate at which tasks were executed. Under heavy load, the system would end up spending a lot of resources just starting and stopping threads. To overcome this problem, it would be useful to have a system where threads could be re-used, i.e., after executing one task, the thread could be made to execute another, and so on.</LI>
+
+<LI class="MsoNormal">If all tasks required a thread of their own, then during a period of heavy load, the system could end up running a large number of threads concurrently. It would be better to be able to put an upper limit on the number of threads that could run on the system concurrently.</LI>
+</UL>
+
+<P class="MsoNormal">The ThreadPool solves above problems. It implements a pool of threads to which tasks can be submitted for execution. The pool starts with a number of pre-allocated threads (Minimum Threads). When load increases, new threads are started until a Maximum limit is reached. When load decreases, the pool retains a number of idle threads (Maximum Spare threads) and terminates the excess.</P>
+
+<P class="MsoNormal">When a task is submitted to the pool, the first available thread executes it. If all threads are busy, the pool tries to create more threads. If no more threads can be created because the maximum number of threads has been already created, then the task must wait until one of the busy threads becomes available to process it.</P>
+
+<H2>Operations</H2>
+
+<P class="MsoNormal">There are two operations supported by a ThreadPool.</P>
+
+<P class="MsoNormal">RunTask - This allows a Task to be submitted for execution. 
+  The first available thread executes the task. If there are no available threads, 
+  then the ThreadPool attempts to create a new thread. Creation of new thread 
+  is possible only if the number of threads in the pool is below the maximum limit. 
+  If a thread cannot be created, then the caller is blocked until a thread becomes 
+  free to execute the task.</P>
+
+<P class="MsoNormal">QueueTask - This is similar to RunTask except that the caller 
+  does not have to wait for a thread to be allocated for the task. The task is 
+  added to a queue, and control returns to the caller immediately.</P>
+
+<H2>Implementation</H2>
+
+<P class="MsoNormal">The DM1 ThreadPool implementation is based upon the ThreadPool 
+  implementation in Apache Software Foundation's Tomcat Jakarta Connectors project. 
+  There are a few differences between the DM1 implementation and the Jakarta implementation:</P>
+
+<P class="MsoNormal">1. In Java, certain operations on primitive types are guaranteed to be thread safe. C++ offers no such guarantee - hence there is more locking.</P>
+
+<P class="MsoNormal">2. The Java code does not have support for queuing tasks. If all threads are busy, the Pool blocks the caller until a thread became available to run the task. The DM1 version allows the caller to queue a task and not wait for a thread to become available. A separate thread, called the QueueHandler, monitors the task queue, and runs any tasks in the queue.</P>
+
+<P class="MsoNormal">The ThreadPool consists of a pool of WorkerThreads. A WorkerThread is responsible for executing a task. When a task is submitted, the first available WorkerThread is allocated the task for execution. When the WorkerThread finishes executing the task, it returns itself to the pool.</P>
+
+<P class="MsoNormal">If a WorkerThread is not available to execute a task, the pool attempts to start a new WorkerThread (actually, for reasons of efficiency, more than one WorkerThread is started). However, it can do so only if the number of threads in the pool is below the maximum limit. If allocation of a new thread fails due to above reason, then the task cannot be executed until a WorkerThread becomes available.</P>
+
+<P class="MsoNormal">The following parameters within the ThreadPool can be configured during construction of the ThreadPool:</P>
+
+<P class="MsoNormal">MinimumThreads - This defines the minimum number of WorkerThreads 
+  that will be kept running at all times.</P>
+
+<P class="MsoNormal">MinimumSpareThreads - The pool will try to maintain at least 
+  these many spare threads.</P>
+
+<P class="MsoNormal">MaximumSpareThreads - The pool will tolerate at least these 
+  many spare threads when load decreases, before starting to terminate excess 
+  threads.</P>
+
+<P class="MsoNormal">MaximumThreads - The pool will never allocate more than these 
+  many threads.</P>
+
+<P class="MsoNormal">The ThreadPool has a MonitorThread running at all times. This thread wakes up periodically and instructs excess WorkerThreads to terminate. The number of threads that are in excess is calculated on using the following formula:</P>
+
+<P class="MsoNormal">Excess Threads = Total Number of Threads - Number of Active 
+  Threads - Maximum Spare Threads.</P>
+
+<P class="MsoNormal">The ThreadPool also has a QueueHandlerThread running at all times. This thread is responsible for executing tasks that have been put on the task queue. The task queue is a linked list of tasks, to which a task is added when the caller performs a QueueTask operation.</P>
+
+<P class="MsoNormal">Tasks must be derived from the Task class. The derived class must implement the run method. The ThreadPool expects tasks to be allocated on the heap, and deletes them once they have been executed. Hence, the programmer must never delete a task.</P>
+
+<H2>API</H2>
+
+<PRE>
+ 
+namespace dm1 { 
+ 
+        /** 
+         * Base class for all tasks.  
+         */ 
+        class Task  { 
+        public: 
+                virtual ~Task() ; 
+ 
+                /** 
+                 * Derived classes need to implement this method. 
+                 */ 
+                virtual void run() = 0; 
+        }; 
+ 
+        /** 
+         * The ThreadPool class implements a pool of Worker threads. Tasks can be 
+         * queued for execution by one of the Worker threads. The pool is dynamic - it will 
+         * start new worker threads if necessary, or terminate existing worker threads when 
+         * no longer required. 
+         */ 
+        class ThreadPool { 
+        public: 
+ 
+                /** 
+                 * Creates a thread pool. 
+                 */ 
+                explicit ThreadPool( 
+                        int maxThreads = MAX_THREADS,  
+                        int minSpareThreads = MIN_SPARE_THREADS, 
+                        int maxSpareThreads = MAX_SPARE_THREADS,  
+                        int monitorTimeout = WORK_WAIT_TIMEOUT, 
+                        int queueHandlerTimeout = QUEUE_HANDLER_TIMEOUT); 
+ 
+                /** 
+                 * Starts the ThreadPool. 
+                 */ 
+                void start(); 
+ 
+                /** 
+                 * Executes the task provided. 
+                 * Caller blocks until a thread is available to run the task. 
+                 * Task must be allocated on the heap. 
+                 * The pool will delete the task when it is 
+                 * completed. 
+                 */ 
+                void runTask(Task *toRun); 
+ 
+                /** 
+                 * Asynchronously runs the task submitted. 
+                 * Control returns to the caller immediately. 
+                 * Task must be allocated on the heap. 
+                 * The pool will delete the task when it is 
+                 * completed. 
+                 */ 
+                void queueTask(Task *toRun); 
+ 
+                /** 
+                 * Shuts down the pool. 
+                 */ 
+                void shutdown(); 
+ 
+                static void setDebug(int level) ; 
+        }; 
+} 
+</PRE>
+
+<HR>
+Copyright &copy; 2002-2004 by <A href="mailto:dibyendu@mazumdar.demon.co.uk">Dibyendu Majumdar</A>
+</BODY>
+</HTML>
+
