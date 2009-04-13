@@ -1,6 +1,9 @@
 h1 {
     color: #0066CC;
-    margin-left: 0%
+    margin-left: 0%;
+    border-bottom: 1px dotted #333333;
+    margin-bottom: 20px
+
 }
 h2,h3 {
     color: #0066CC;
