@@ -8,13 +8,190 @@ import (
 	"os"
 )
 
-type LockError struct {
-	e string
-}
+/**
+    Algorithm
+    ---------
 
-func (le *LockError) String() string {
-	return le.e
-}
+    The main algorithm for the lock manager is shown in the form of use cases.
+    Some aspects are not described - such as deadlock detection
+
+    a001 - lock acquire
+    *******************
+
+    Main Success Scenario
+    .....................
+
+    1) Search for the lock header
+    2) Lock header not found
+    3) Allocate new lock header
+    4) Allocate new lock request
+    5) Append lock request to queue with status = GRANTED and reference count of 1.
+    6) Set lock granted mode to GRANTED
+
+    Extensions
+    ..........
+
+    2. a) Lock header found but client has no prior request for the lock.
+     
+      1. Do `a003 - handle new request`_.
+
+    b) Lock header found and client has a prior GRANTED lock request.
+     
+      1. Do `a002 - handle lock conversion`_.
+
+    a003 - handle new request
+    *************************
+
+    Main Success Scenario
+    .....................
+
+    1) Allocate new request.
+    2) Append lock request to queue with reference count of 1.
+    3) Check for waiting requests.
+    4) Check whether request is compatible with granted mode.
+    5) There are no waiting requests and lock request is compatible with
+    granted mode.
+    6) Set lock's granted mode to maximum of this request and existing granted mode.
+    7) Success.
+
+    Extensions
+    ..........
+
+    5. a) There are waiting requests or lock request is not compatible with
+      granted mode.
+     
+      1. Do `a004 - lock wait`_.
+
+    a002 - handle lock conversion
+    *****************************
+
+    Main Success Scenario
+    .....................
+
+    1) Check lock compatibility with granted group.
+    2) Lock request is compatible with granted group.
+    3) Grant lock request, and update granted mode for the request.
+
+    Extensions
+    ..........
+
+    2. a) Lock request is incompatible with granted group.
+     
+      1. Do `a004 - lock wait`_.
+
+
+    a004 - lock wait
+    ****************
+
+    Main Success Scenario
+    .....................
+
+    1) Wait for lock.
+    2) Lock granted.
+    3) Success.
+
+    Extensions
+    ..........
+
+    2. a) Lock was not granted.
+     
+      1. Failure!
+
+    b001 - release lock
+    *******************
+
+    Main Success Scenario
+    .....................
+
+    1) Decrease reference count.
+    2) Sole lock request and reference count is zero.
+    3) Remove lock header from hash table.
+    4) Success.
+
+    Extensions
+    ..........
+
+    2. a) Reference count greater than zero.
+     
+      1. Success.
+
+    2. b) Reference count is zero and there are other requests on the lock.
+     
+      1. Remove request from the queue.
+      2. Do `b002 - grant waiters`_.
+
+    b002 - grant waiters
+    ********************
+
+    Main Success Scenario
+    .....................
+
+
+    1) Get next granted lock.
+    2) Recalculate granted mode.
+    3) Repeat from 1) until no more granted requests.
+    4) Get next waiting request.
+    5) Request is compatible with granted mode.
+    6) Grant request and wake up thread waiting for the lock. Increment reference count of
+    the granted request and set granted mode to maximum of current mode and granted request.
+    7) Repeat from 4) until no more waiting requests.
+
+    Extensions
+    ..........
+
+    1. a) Conversion request.
+     
+      1. Do `b003 - grant conversion request`_.
+      2. Resume from 2).
+
+    4. a) "conversion pending" is set (via b003).
+     
+      1. Done.
+
+    5. a) Request is incompatible with granted mode.
+     
+      1. Done.
+
+
+    b003 - grant conversion request
+    *******************************
+
+    Main Success Scenario
+    .....................
+
+    1) Do `c001 - check request compatible with granted group`_.
+    2) Request is compatible.
+    3) Grant conversion request.
+
+    Extensions
+    ..........
+
+    2. a) Conversion request incompatible with granted group.
+     
+      1. Set "conversion pending" flag.
+
+    c001 - check request compatible with granted group
+    **************************************************
+
+    Main Success Scenario
+    .....................
+
+    1) Get next granted request.
+    2) Request is compatible with this request.
+    3) Repeat from 1) until no more granted requests.
+
+    Extensions
+    ..........
+
+    1. a) Request belongs to the caller.
+     
+      1. Resume from step 3).
+
+    2. a) Request is incompatible with this request.
+     
+      1. Failure!
+
+**/
 
 type LockMode int
 
@@ -27,6 +204,51 @@ const (
 	UPDATE                     LockMode = 5
 	EXCLUSIVE                  LockMode = 6
 )
+
+type LockDuration int
+
+const (
+	INSTANT_DURATION LockDuration = 1
+	MANUAL_DURATION  LockDuration = 2
+	COMMIT_DURATION  LockDuration = 3
+)
+
+type Comparable interface {
+	Equals(other Comparable) bool
+}
+
+type Hashable interface {
+	HashCode() int
+}
+
+type LockOwner interface {
+	Comparable
+}
+
+type Lockable interface {
+	Comparable
+	Hashable
+}
+
+type LockManager interface {
+	Acquire(lockOwner LockOwner, lockable Lockable, lockMode LockMode, lockDuration LockDuration, timeout int) (bool, os.Error)
+	Release(lockOwner LockOwner, lockable Lockable, force bool) (bool, os.Error)
+	Downgrade(lockOwner LockOwner, lockable Lockable, newLockMode LockMode) (bool, os.Error)
+}
+
+
+/*
+ * Implementation
+ */
+
+
+type LockError struct {
+	e string
+}
+
+func (le *LockError) String() string {
+	return le.e
+}
 
 var compatibilityMatrix = [7][7]bool{
 	[7]bool{true, true, true, true, true, true, true},
@@ -64,36 +286,6 @@ func (this LockMode) isCompatible(mode LockMode) bool {
 
 func (this LockMode) maximumOf(mode LockMode) LockMode {
 	return conversionMatrix[this][mode]
-}
-
-type LockDuration int
-
-const (
-	INSTANT_DURATION LockDuration = 1
-	MANUAL_DURATION  LockDuration = 2
-	COMMIT_DURATION  LockDuration = 3
-)
-
-type Comparable interface {
-	Equals(other Comparable) bool
-}
-
-type Hashable interface {
-	HashCode() int
-}
-
-type LockOwner interface {
-	Comparable
-}
-
-type Lockable interface {
-	Comparable
-	Hashable
-}
-
-type LockManager interface {
-	Acquire(lockOwner LockOwner, lockable Lockable, lockMode LockMode, lockDuration LockDuration, timeout int) (bool, os.Error)
-	Release(lockOwner LockOwner, lockable Lockable, force bool) (bool, os.Error)
 }
 
 var hashPrimes = []int{53, 97, 193, 389, 769, 1543, 3079, 6151,
@@ -144,17 +336,20 @@ func (this *Parker) Unpark() {
 	runtime.Semrelease(&this.sema)
 }
 
-func waiter(parker *Parker) {
-	fmt.Printf("Going to sleep\n")
-	parker.Park()
-	fmt.Printf("Woke up\n")
-}
-
 type Link interface {
 	Next() Link
 	Prev() Link
 	SetNext(link Link)
 	SetPrev(link Link)
+}
+
+type List interface {
+	Clear()
+	GetHead() Link
+	GetTail() Link
+	AddLast(Link)
+	AddFirst(Link)
+	Remove(Link)
 }
 
 type SimpleLinkedList struct {
@@ -166,16 +361,20 @@ func NewList() *SimpleLinkedList {
 	return &SimpleLinkedList{nil, nil}
 }
 
-func (this *SimpleLinkedList) clear() {
+func (this *SimpleLinkedList) Clear() {
 	this.head = nil
 	this.tail = nil
 }
 
-func (this *SimpleLinkedList) getHead() Link {
+func (this *SimpleLinkedList) GetHead() Link {
 	return this.head
 }
 
-func (this *SimpleLinkedList) addLast(link Link) {
+func (this *SimpleLinkedList) GetTail() Link {
+	return this.tail
+}
+
+func (this *SimpleLinkedList) AddLast(link Link) {
 	link.SetPrev(this.tail)
 	link.SetNext(nil)
 	if this.head == nil {
@@ -187,7 +386,7 @@ func (this *SimpleLinkedList) addLast(link Link) {
 	this.tail = link
 }
 
-func (this *SimpleLinkedList) addFirst(link Link) {
+func (this *SimpleLinkedList) AddFirst(link Link) {
 	link.SetNext(this.head)
 	link.SetPrev(nil)
 	if this.tail == nil {
@@ -199,7 +398,7 @@ func (this *SimpleLinkedList) addFirst(link Link) {
 	this.head = link
 }
 
-func (this *SimpleLinkedList) remove(link Link) {
+func (this *SimpleLinkedList) Remove(link Link) {
 	next := link.Next()
 	prev := link.Prev()
 	if next != nil {
@@ -217,7 +416,6 @@ func (this *SimpleLinkedList) remove(link Link) {
 }
 
 type Element struct {
-	i    int
 	next Link
 	prev Link
 }
@@ -251,14 +449,14 @@ type LockParams struct {
 
 type LockBucket struct {
 	sync  sync.Mutex
-	chain SimpleLinkedList
+	chain List
 }
 
 type LockItem struct {
 	Element
 
 	lockable    Lockable
-	queue       SimpleLinkedList
+	queue       List
 	grantedMode LockMode
 	waiting     bool
 }
@@ -340,7 +538,7 @@ func (l *LockManagerImpl) rehash() {
 	newLockHashTable := make([]LockBucket, newHashTableSize)
 	for i := 0; i < l.hashTableSize; i++ {
 		bucket := &l.lockHashTable[i]
-		for link := bucket.chain.getHead(); link != nil; {
+		for link := bucket.chain.GetHead(); link != nil; {
 			next := link.Next()
 			item, _ := link.(*LockItem)
 			if item.lockable == nil {
@@ -348,7 +546,7 @@ func (l *LockManagerImpl) rehash() {
 			}
 			h := (item.lockable.HashCode() & 0x7FFFFFFF) % newHashTableSize
 			newBucket := &newLockHashTable[h]
-			newBucket.chain.addLast(item)
+			newBucket.chain.AddLast(item)
 			link = next
 		}
 	}
@@ -359,12 +557,12 @@ func (l *LockManagerImpl) rehash() {
 	l.threshold = (int)(float(l.hashTableSize) * l.loadFactor)
 	for i := 0; i < oldHashTableSize; i++ {
 		bucket := &oldLockHashTable[i]
-		bucket.chain.clear()
+		bucket.chain.Clear()
 	}
 }
 
 func (item *LockItem) findRequest(lockOwner LockOwner) *LockRequest {
-	for link := item.queue.getHead(); link != nil; link = link.Next() {
+	for link := item.queue.GetHead(); link != nil; link = link.Next() {
 		request, _ := link.(*LockRequest)
 		if request.lockOwner == lockOwner || request.lockOwner.Equals(lockOwner) {
 			return request
@@ -376,16 +574,20 @@ func (item *LockItem) findRequest(lockOwner LockOwner) *LockRequest {
 func (bucket *LockBucket) findLock(context *LockContext) bool {
 	bucket.sync.Lock()
 	defer bucket.sync.Unlock()
-	for link := bucket.chain.getHead(); link != nil; {
+	context.lockItem = nil
+	for link := bucket.chain.GetHead(); link != nil; {
 		next := link.Next()
 		item, _ := link.(*LockItem)
 		if item.lockable == nil {
-			bucket.chain.remove(link)
+			bucket.chain.Remove(link)
 			continue
 		}
 		if item.lockable == context.params.lockable || item.lockable.Equals(context.params.lockable) {
 			context.lockItem = item
 			context.lockRequest = item.findRequest(context.params.lockOwner)
+			if context.lockRequest == nil {
+				return false
+			}
 			return true
 		}
 		link = next
@@ -393,22 +595,9 @@ func (bucket *LockBucket) findLock(context *LockContext) bool {
 	return false
 }
 
-func (l *LockManagerImpl) findLock(lockOwner LockOwner, lockable Lockable) LockMode {
-	params := &LockParams{}
-	params.lockOwner = lockOwner
-	params.lockable = lockable
-
-	context := &LockContext{}
-	context.params = params
-
-	l.globalLock.RLock()
-	defer l.globalLock.RUnlock()
-
-	var h int = (context.params.lockable.HashCode() & 0x7FFFFFFF) % l.hashTableSize
-	context.lockItem = nil
+func (l *LockManagerImpl) findLock(context *LockContext) LockMode {
+	h := (context.params.lockable.HashCode() & 0x7FFFFFFF) % l.hashTableSize
 	context.bucket = &l.lockHashTable[h]
-	context.lockRequest = nil
-
 	found := context.bucket.findLock(context)
 	if found {
 		return context.lockRequest.mode
@@ -436,8 +625,9 @@ func (l *LockManagerImpl) Acquire(lockOwner LockOwner, lockable Lockable, mode L
 	defer l.globalLock.RUnlock()
 
 	ok, err := l.doAcquire(context)
-	if ok && duration == INSTANT_DURATION {
-		_, err1 := l.doRelease(context)
+	if ok && duration == INSTANT_DURATION && context.status == GRANTED {
+		context.params.action = RELEASE
+		_, err1 := l.doReleaseInternal(context)
 		if err1 != nil {
 			return false, err1
 		}
@@ -445,15 +635,11 @@ func (l *LockManagerImpl) Acquire(lockOwner LockOwner, lockable Lockable, mode L
 	return ok, err
 }
 
-func (l *LockManagerImpl) doRelease(context *LockContext) (bool, os.Error) {
-	return false, &LockError{"Not yet implemented"}
-}
-
 func (l *LockItem) checkCompatible(request *LockRequest, mode LockMode) bool {
 
 	iscompatible := true
 
-	for link := l.queue.getHead(); link != nil; link = link.Next() {
+	for link := l.queue.GetHead(); link != nil; link = link.Next() {
 		other, _ := link.(*LockRequest)
 		if other == request {
 			continue
@@ -521,8 +707,8 @@ func (l *LockManagerImpl) handleNewLock(context *LockContext) {
 		lockItem := NewLockItem(context.params.lockable, context.params.mode)
 		r := NewLockRequest(lockItem, context.params.lockOwner,
 			context.params.mode, context.params.duration)
-		lockItem.queue.addLast(r)
-		context.bucket.chain.addLast(lockItem)
+		lockItem.queue.AddLast(r)
+		context.bucket.chain.AddLast(lockItem)
 		l.count++
 		context.status = GRANTED
 	} else {
@@ -537,28 +723,31 @@ func (l *LockManagerImpl) handleNewRequest(context *LockContext) (bool, os.Error
 		context.status = GRANTABLE
 		return true, nil
 	} else if !can_grant && context.params.timeout == 0 {
-		return false, &LockError{"Lock request denied"}
+		context.status = TIMEOUT
+		return false, &LockError{"Lock request timed out"}
 	}
 
 	context.lockRequest = NewLockRequest(context.lockItem,
 		context.params.lockOwner, context.params.mode,
 		context.params.duration)
-	context.lockItem.queue.addLast(context.lockRequest)
+	context.lockItem.queue.AddLast(context.lockRequest)
 	if can_grant {
 		context.lockItem.grantedMode = context.params.mode.maximumOf(context.lockItem.grantedMode)
 		context.status = GRANTED
 		return true, nil
-	} else {
-		context.converting = false
-	}
+	} 
+	context.converting = false
 	return false, nil
 }
 
 func (l *LockManagerImpl) handleConversionRequest(context *LockContext) (bool, os.Error) {
+
 	if context.lockRequest.status == REQ_CONVERTING ||
 		context.lockRequest.status == REQ_WAITING {
 		return false, &LockError{"Internal error: invalid state"}
-	} else if context.lockRequest.status == REQ_GRANTED {
+	} 
+
+	if context.lockRequest.status == REQ_GRANTED {
 		if context.params.mode == context.lockRequest.mode {
 			if context.params.duration != INSTANT_DURATION {
 				context.lockRequest.count++
@@ -592,10 +781,10 @@ func (l *LockManagerImpl) handleConversionRequest(context *LockContext) (bool, o
 				}
 				return true, nil
 			} else if !can_grant && context.params.timeout == 0 {
-				return false, &LockError{"Lock request denied"}
-			} else {
-				context.converting = true
-			}
+				context.status = TIMEOUT
+				return false, &LockError{"Lock request timed out"}
+			} 
+			context.converting = true
 			return false, nil
 		}
 	}
@@ -611,12 +800,11 @@ func (l *LockManagerImpl) prepareToWait(context *LockContext) {
 		context.lockRequest.convertDuration = context.params.duration
 		context.lockRequest.status = REQ_CONVERTING
 	}
+	context.lockRequest.requester = NewParker()
 }
 
 func (l *LockManagerImpl) waitForSignal(context *LockContext) {
-	context.lockRequest.requester = NewParker()
 	context.lockRequest.requester.Park()
-	context.lockRequest.requester = nil
 }
 
 func (l *LockManagerImpl) handleWaitResult(context *LockContext) (bool, os.Error) {
@@ -641,8 +829,8 @@ func (l *LockManagerImpl) handleWaitResult(context *LockContext) (bool, os.Error
 
         if !context.converting {
             /* If not converting the delete the newly created request. */
-            context.lockItem.queue.remove(context.lockRequest)
-            if context.lockItem.queue.getHead() == nil {
+            context.lockItem.queue.Remove(context.lockRequest)
+            if context.lockItem.queue.GetHead() == nil {
                 context.lockItem.lockable = nil // Setup lock for garbage collection
                 l.count--
             }
@@ -667,6 +855,220 @@ func (l *LockManagerImpl) handleWaitResult(context *LockContext) (bool, os.Error
 	return false, &LockError{"Lock request denied"}
     }
 
+func (l *LockManagerImpl) grantWaiters(action ReleaseAction, myReq *LockRequest, lockitem LockItem) {
+        /*
+         * 9. Recalculate granted mode by calculating max mode amongst all
+         * granted (including conversion) requests. If a conversion request
+         * is compatible with all other granted requests, then grant the
+         * conversion, recalculating granted mode. If a waiting request is
+         * compatible with granted mode, and there are no pending conversion
+         * requests, then grant the request, and recalculate granted mode.
+         * Otherwise, we are done. Note that this means that FIFO is
+         * respected for waiting requests, but conversion requests are
+         * granted as soon as they become compatible. Also, note that if a
+         * conversion request is pending, waiting requests cannot be
+         * granted.
+         */
+	lockitem.grantedMode = NONE
+	lockitem.waiting = false
+	converting := false
+	for link := lockitem.queue.GetHead(); link != null; link = link.Next() {
+		r, _ := link.(*LockRequest)
+		if r.status == REQ_GRANTED {	
+			lockitem.grantedMode = r.mode.maximumOf(lockitem.grantedMode)
+		} else if r.status == REQ_CONVERTING) {
+			can_grant := lockitem.checkCompatible(lockitem, r, r.convertMode)
+			if can_grant {
+				if r.convertDuration == INSTANT_DURATION {
+					/*
+					 * If the request is for an instant duration lock then
+					 * don't perform the conversion.
+					 */
+					r.convertMode = r.mode
+				} else {
+					r.mode = r.convertMode.maximumOf(r.mode)
+					r.convertMode = r.mode
+					if r.convertDuration == COMMIT_DURATION
+						&& r.duration == MANUAL_DURATION {
+						r.duration = COMMIT_DURATION
+					}
+					lockitem.grantedMode = r.mode.maximumOf(lockitem.grantedMode)
+				}
+				/*
+				 * Treat conversions as lock recursion.
+				 */
+				r.count++
+				r.status = REQ_GRANTED
+				r.requester.Unpark()
+			} else {
+				lockitem.grantedMode = r.mode.maximumOf(lockitem.grantedMode)
+				converting = true
+				lockitem.waiting = true
+			}
+		} else if r.status == REQ_WAITING {
+			if !converting && r.mode.isCompatible(lockitem.grantedMode) {
+				r.status = REQ_GRANTED
+				lockitem.grantedMode = r.mode.maximumOf(lockitem.grantedMode)
+				r.requester.Unpark()
+			} else {
+				lockitem.waiting = true
+				break
+			}
+		}
+	}
+}
+
+func (l *LockManagerImpl) releaseLock(context *LockContext) (bool, os.Error) {
+
+        released := false
+        /* 3. If lock found, look for the transaction's lock request. */
+        context.lockRequest = context.lockitem.findRequest(context.parms.lockOwner)
+
+        if context.lockRequest == nil {
+            /* 4. If not found, return success. */
+            /*
+             * Rather than throwing an exception, we return success. This allows
+             * us to use this method in situations where for reasons of efficiency,
+             * the client cannot track the status of lock objects, and therefore
+             * may end up trying to release the same lock multiple times.
+             */
+            return true, nil
+        }
+
+        if context.lockRequest.status == REQ_CONVERTING
+                || context.lockRequest.status == REQ_WAITING {
+            /* 5. If lock in invalid state, return error. */
+            return false, &LockError{"Invalid state"}
+        }
+
+        if context.params.action == DOWNGRADE
+                && context.lockRequest.mode == context.parms.downgradeMode {
+            /*
+             * If downgrade request and lock is already in target mode,
+             * return success.
+             */
+            return true, nil
+        }
+
+        if context.parms.action == RELEASE
+                && context.lockRequest.duration == COMMIT_DURATION {
+            /*
+             * 6(1). If noforce, and lock is held for commit duration, then do
+             * not release the lock request.
+             */
+            return false, nil
+        }
+
+        if context.parms.action == RELEASE
+                && context.lockRequest.count > 1 {
+            /*
+             * 6. If noforce, and reference count greater than 0, then do
+             * not release the lock request. Decrement reference count if
+             * greater than 0, and, return Ok.
+             */
+            context.lockRequest.count--
+            return false, nil
+        }
+
+        /*
+         * Either the lock is being downgraded or it is being released and
+         * its reference count == 0 or it is being forcibly released.
+         */
+
+        if context.lockRequest == context.lockitem.queue.GetHead()
+                && context.lockRequest == context.lockitem.queue.GetTail()
+                && context.parms.action != DOWNGRADE {
+            /* 7. If sole lock request, then release the lock and return Ok. */
+            context.lockitem.queue.Remove(context.lockRequest)
+            context.lockitem.lockable = nil
+            count--
+            return true, nil
+        }
+
+        /*
+         * 8. If not downgrading, delete the lock request from the queue.
+         * Otherwise, downgrade the mode assigned to the lock request.
+         */
+        if context.parms.action != ReleaseAction.DOWNGRADE {
+            context.lockitem.queue.Remove(context.lockRequest)
+            released = true
+        } else {
+            /*
+             * We need to determine whether is a valid downgrade request. To
+             * do so, we do a reverse check - ie, if the new mode could have
+             * been upgraded to current mode, then it is okay to downgrade.
+             */
+            mode := context.parms.downgradeMode.maximumOf(context.lockRequest.mode)
+            if mode == context.lockRequest.mode {
+                context.lockRequest.convertMode = context.lockRequest.mode = context.parms.downgradeMode
+            } else {
+                return false, &LockError{"Invalid downgrade request"}
+            }
+            released = false
+        }
+        /*
+         * 9. Recalculate granted mode by calculating max mode amongst all
+         * granted (including conversion) requests.
+         */
+        ok, err := grantWaiters(context.parms.action, context.lockRequest, context.lockitem)
+        if err != nil {
+               return released, err
+        }
+        return released, nil
+    }
+
+func (l *LockManagerImpl) release(lockOwner LockOwner, lockable Lockable, bool force) (bool, os.Error) {
+        params := new(LockParams)
+        params.lockable = lockable
+        params.lockOwner = lockOwner
+	if force {
+		params.action = FORCE_RELEASE
+	} else {
+		params.action = RELEASE
+	}
+        context := new(LockContext)
+	context.params = params
+
+        l.globalLock.RLock()
+	defer l.globalLock.RUnlock()
+        return l.doReleaseInternal(context)
+    }
+
+func (l *LockManagerImpl) downgrade(lockOwner LockOwner, lockable Lockable, downgradeTo LockMode) (bool, os.Error) {
+        params := new(LockParams)
+        params.lockable = lockable
+        params.lockOwner = lockOwner
+        params.action = DOWNGRADE
+        params.downgradeMode = downgradeTo
+
+        context := new(LockContext)
+	context.params = params
+
+        l.globalLock.RLock()
+	defer l.globalLock.RUnlock()
+        return l.doReleaseInternal(context)
+    }
+
+func (l *LockManagerImpl) doReleaseInternal(context *LockContext) (bool, os.Error) {
+        context.lockRequest = nil
+
+        h := (context.parms.lockable.HashCode() & 0x7FFFFFFF) % l.hashTableSize
+        context.bucket = &l.lockHashTable[h]
+	context.bucket.sync.Lock()
+	defer context.bucket.sync.Unlock()
+            /* 1. Search for the lock. */
+            if !context.bucket.findLock(context) {
+                /* 2. If not found, return success. */
+                /*
+                 * Rather than throwing an exception, we return success. This allows
+                 * us to use this method in situations where for reasons of efficiency,
+                 * the client cannot track the status of lock objects, and therefore
+                 * may end up trying to release the same lock multiple times.
+                 */
+                return true, nil
+            }
+            return l.releaseLock(context)
+    }
 
 type IntObject int
 
@@ -699,9 +1101,9 @@ func main() {
 	time.Sleep(1000000000)
 
 	list := NewList()
-	list.addLast(&Element{1, nil, nil})
+	list.AddLast(&Element{1, nil, nil})
 
-	for link := list.getHead(); link != nil; link = link.Next() {
+	for link := list.GetHead(); link != nil; link = link.Next() {
 		e, _ := link.(*Element)
 		fmt.Printf("list item = %v\n", e.i)
 	}
