@@ -234,8 +234,8 @@ type LockManager interface {
 	Acquire(lockOwner LockOwner, lockable Lockable, lockMode LockMode, lockDuration LockDuration, timeout int) (bool, os.Error)
 	Release(lockOwner LockOwner, lockable Lockable, force bool) (bool, os.Error)
 	Downgrade(lockOwner LockOwner, lockable Lockable, newLockMode LockMode) (bool, os.Error)
+	FindLock(lockOwner LockOwner, lockable Lockable) (LockMode, os.Error) 
 }
-
 
 /*
  * Implementation
@@ -488,7 +488,7 @@ type LockRequest struct {
 	convertDuration    LockDuration
 	lockOwner   LockOwner
 	lockItem    *LockItem
-	requester   *Parker
+	requester   Parker
 }
 
 func NewLockRequest(lockItem *LockItem, lockOwner LockOwner, mode LockMode, duration LockDuration) *LockRequest {
@@ -605,6 +605,21 @@ func (l *LockManagerImpl) findLock(context *LockContext) LockMode {
 	return NONE
 }
 
+func (l *LockManagerImpl) FindLock(lockOwner LockOwner, lockable Lockable) (LockMode, os.Error) {
+
+	params := LockParams{}
+	params.lockOwner = lockOwner
+	params.lockable = lockable
+
+	context := LockContext{}
+	context.params = &params
+
+	l.globalLock.RLock()
+	defer l.globalLock.RUnlock()
+
+	return findLock(&context), nil
+}
+
 func (l *LockManagerImpl) Acquire(lockOwner LockOwner, lockable Lockable, mode LockMode, duration LockDuration, timeout int) (bool, os.Error) {
 
 	params := &LockParams{}
@@ -665,7 +680,7 @@ func (l *LockManagerImpl) doAcquire(context *LockContext) (bool, os.Error) {
 	context.bucket = &l.lockHashTable[h]
 
 	context.bucket.sync.Lock()
-	if l.findLock(context.params.lockOwner, context.params.lockable) == NONE {
+	if l.findLock(context) == NONE {
 		ok, err := l.handleNewRequest(context)
 		if ok || err != nil {
 			context.bucket.sync.Unlock()
@@ -800,7 +815,6 @@ func (l *LockManagerImpl) prepareToWait(context *LockContext) {
 		context.lockRequest.convertDuration = context.params.duration
 		context.lockRequest.status = REQ_CONVERTING
 	}
-	context.lockRequest.requester = NewParker()
 }
 
 func (l *LockManagerImpl) waitForSignal(context *LockContext) {
@@ -981,7 +995,7 @@ func (l *LockManagerImpl) releaseLock(context *LockContext) (bool, os.Error) {
             /* 7. If sole lock request, then release the lock and return Ok. */
             context.lockitem.queue.Remove(context.lockRequest)
             context.lockitem.lockable = nil
-            count--
+            l.count--
             return true, nil
         }
 
@@ -1017,7 +1031,7 @@ func (l *LockManagerImpl) releaseLock(context *LockContext) (bool, os.Error) {
         return released, nil
     }
 
-func (l *LockManagerImpl) release(lockOwner LockOwner, lockable Lockable, bool force) (bool, os.Error) {
+func (l *LockManagerImpl) Release(lockOwner LockOwner, lockable Lockable, bool force) (bool, os.Error) {
         params := new(LockParams)
         params.lockable = lockable
         params.lockOwner = lockOwner
@@ -1034,7 +1048,7 @@ func (l *LockManagerImpl) release(lockOwner LockOwner, lockable Lockable, bool f
         return l.doReleaseInternal(context)
     }
 
-func (l *LockManagerImpl) downgrade(lockOwner LockOwner, lockable Lockable, downgradeTo LockMode) (bool, os.Error) {
+func (l *LockManagerImpl) Downgrade(lockOwner LockOwner, lockable Lockable, downgradeTo LockMode) (bool, os.Error) {
         params := new(LockParams)
         params.lockable = lockable
         params.lockOwner = lockOwner
