@@ -1,8 +1,8 @@
-include ../../Make.$(GOARCH)
+include $(GOROOT)/src/Make.$(GOARCH)
 
 TARG=lockmgr
 GOFILES=\
 	lockmgr.go
 
-include ../../Make.cmd
+include $(GOROOT)/src/Make.cmd
 
