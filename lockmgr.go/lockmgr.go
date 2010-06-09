@@ -576,6 +576,7 @@ func (bucket *LockBucket) findLock(context *LockContext) *LockItem {
 		item, _ := link.(*LockItem)
 		if item.lockable == nil {
 			bucket.chain.Remove(link)
+			link = next
 			continue
 		}
 		if item.lockable == context.params.lockable || item.lockable.Equals(context.params.lockable) {
@@ -1062,7 +1063,6 @@ func (l *LockManagerImpl) Downgrade(lockOwner LockOwner, lockable Lockable, down
 
 func (l *LockManagerImpl) doReleaseInternal(context *LockContext) (bool, os.Error) {
 	context.lockRequest = nil
-
 	h := (context.params.lockable.HashCode() & 0x7FFFFFFF) % l.hashTableSize
 	context.bucket = &l.lockHashTable[h]
 	context.bucket.sync.Lock()
@@ -1098,7 +1098,7 @@ func (i IntObject) HashCode() int {
 	return int(i)
 }
 
-func main() {
+func main1() {
 	fmt.Printf("Lock compatible = %t\n", NONE.isCompatible(NONE))
 	fmt.Printf("Lock compatible = %t\n", EXCLUSIVE.isCompatible(SHARED))
 	fmt.Printf("Lock maxof = %v\n", SHARED.maximumOf(EXCLUSIVE))
@@ -1131,8 +1131,35 @@ func main() {
 	mode := lockmgr.FindLock(i, j)
 	fmt.Printf("lock mode: %v\n", mode)
 
-	_, err := lockmgr.Release(i, j, false)
+	_, err = lockmgr.Release(i, j, false)
 	if err != nil {
 		fmt.Printf("error occurred: %v\n", err)
+	}
+}
+
+func main() {
+
+	runtime.GOMAXPROCS(2)
+	var i IntObject = 33
+	var j IntObject = 33
+	var k IntObject = 34
+	m := NewLockManager()
+
+	go func() {
+		for n:=0; n < 10000; n++ {
+			m.Acquire(i, j, EXCLUSIVE, MANUAL_DURATION, 0)
+			if n % 500  == 0 {
+				fmt.Printf("goroutine %v iteration\n", n)
+			}
+			m.Release(i, j, false)
+		}
+	}()
+
+	for n:=0; n < 10000; n++ {
+		m.Acquire(k, j, EXCLUSIVE, MANUAL_DURATION, 0)
+		if n % 500 == 0 {
+			fmt.Printf("main %v iteration\n", n)
+		}
+		m.Release(k, j, false)
 	}
 }
