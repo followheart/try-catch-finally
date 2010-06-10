@@ -537,16 +537,13 @@ func (l *LockManagerImpl) rehash() {
 	newLockHashTable := make([]LockBucket, newHashTableSize)
 	for i := 0; i < l.hashTableSize; i++ {
 		bucket := &l.lockHashTable[i]
-		for link := bucket.chain.GetHead(); link != nil; {
-			next := link.Next()
+		for link := bucket.chain.GetHead(); link != nil; link = link.Next() {
 			item, _ := link.(*LockItem)
-			if item.lockable == nil {
-				continue
+			if item.lockable != nil {
+				h := (item.lockable.HashCode() & 0x7FFFFFFF) % newHashTableSize
+				newBucket := &newLockHashTable[h]
+				newBucket.chain.AddLast(item)
 			}
-			h := (item.lockable.HashCode() & 0x7FFFFFFF) % newHashTableSize
-			newBucket := &newLockHashTable[h]
-			newBucket.chain.AddLast(item)
-			link = next
 		}
 	}
 	oldLockHashTable := l.lockHashTable
