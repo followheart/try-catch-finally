@@ -151,20 +151,65 @@ func BenchmarkContention_3G_2P(b *testing.B) {
 	go func() {
 		for n := 0; n < b.N; n++ {
 			m.Acquire(owner1, lock, EXCLUSIVE, ManualDuration, 0)
+			runtime.Gosched()
 			m.Release(owner1, lock, false)
+			runtime.Gosched()
 		}
 		c <- true
 	}()
 	go func() {
 		for n := 0; n < b.N; n++ {
 			m.Acquire(owner3, lock, EXCLUSIVE, ManualDuration, 0)
+			runtime.Gosched()
 			m.Release(owner3, lock, false)
+			runtime.Gosched()
 		}
 		c <- true
 	}()
 	for n := 0; n < b.N; n++ {
 		m.Acquire(owner2, lock, EXCLUSIVE, ManualDuration, 0)
+		runtime.Gosched()
 		m.Release(owner2, lock, false)
+		runtime.Gosched()
+	}
+	<-c
+	<-c
+}
+
+func BenchmarkContention_3G_3P(b *testing.B) {
+
+	runtime.GOMAXPROCS(3)
+	var lock IntObject = 34
+	var owner1 IntObject = 33
+	var owner2 IntObject = 35
+	var owner3 IntObject = 36
+
+	m := NewLockManager()
+
+	c := make(chan bool)
+	go func() {
+		for n := 0; n < b.N; n++ {
+			m.Acquire(owner1, lock, EXCLUSIVE, ManualDuration, 0)
+			runtime.Gosched()
+			m.Release(owner1, lock, false)
+			runtime.Gosched()
+		}
+		c <- true
+	}()
+	go func() {
+		for n := 0; n < b.N; n++ {
+			m.Acquire(owner3, lock, EXCLUSIVE, ManualDuration, 0)
+			runtime.Gosched()
+			m.Release(owner3, lock, false)
+			runtime.Gosched()
+		}
+		c <- true
+	}()
+	for n := 0; n < b.N; n++ {
+		m.Acquire(owner2, lock, EXCLUSIVE, ManualDuration, 0)
+		runtime.Gosched()
+		m.Release(owner2, lock, false)
+		runtime.Gosched()
 	}
 	<-c
 	<-c
@@ -182,13 +227,17 @@ func BenchmarkContention_2G_2P(b *testing.B) {
 	go func() {
 		for n := 0; n < b.N; n++ {
 			m.Acquire(owner1, lock, EXCLUSIVE, ManualDuration, 0)
+			runtime.Gosched()
 			m.Release(owner1, lock, false)
+			runtime.Gosched()
 		}
 		c <- true
 	}()
 	for n := 0; n < b.N; n++ {
 		m.Acquire(owner2, lock, EXCLUSIVE, ManualDuration, 0)
+		runtime.Gosched()
 		m.Release(owner2, lock, false)
+		runtime.Gosched()
 	}
 	<-c
 }
