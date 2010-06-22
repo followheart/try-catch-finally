@@ -1,0 +1,4 @@
+#Sun Jun 20 09:43:53 BST 2010
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.macosx.exe.debug.347947185=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\n<environment append\="true" appendContributed\="true">\n<variable delimiter\="\:" name\="DYLD_LIBRARY_PATH" operation\="append" value\="/Users/dibyendumajumdar/tbb30_018oss/lib"/>\n<variable delimiter\="\:" name\="LIBRARY_PATH" operation\="append" value\="/Users/dibyendumajumdar/tbb30_018oss/lib"/>\n</environment>\n
+environment/project/cdt.managedbuild.config.macosx.exe.release.673570218=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\n<environment append\="true" appendContributed\="true">\n<variable delimiter\="\:" name\="DYLD_LIBRARY_PATH" operation\="append" value\="/Users/dibyendumajumdar/tbb30_018oss/lib"/>\n<variable delimiter\="\:" name\="LIBRARY_PATH" operation\="append" value\="/Users/dibyendumajumdar/tbb30_018oss/lib"/>\n</environment>\n
