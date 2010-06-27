@@ -4,6 +4,18 @@
 
 The material here is gathered from various sources and in some cases is derived from information obtained by reading Go source code.
 
+= GoRoutines =
+
+== History ==
+GoRoutines in Go are based upon previous work done by the Go inventors at Bell Labs. A good account of this history can be here:
+
+[http://swtch.com/~rsc/thread/ http://swtch.com/~rsc/thread/]
+
+Goroutines are multiplexed across threads. The goroutine's stack is managed by the Go compiler/runtime independently of the OS stack, which is why calling external C functions require the stacks to be switched. 
+
+Goroutines are cooperatively scheduled by the Go scheduler (implemented in runtime/proc.c). The Gosched(0 is called at suitable times, such as when a goroutine is about to block in a system call or when getting a lock.
+
+The Go runtime maintains a pool of threads for running goroutines. If a particular goroutine will block due to a system call, a new thread is created if there are other goroutines waiting to run. The runtime requires that either goroutines be blocked in a system call, or at least one goroutine must be runnable. If this is not true, then the runtime aborts with an error reporting a deadlock. 
 
 = Difference between goc and cgo =
 
@@ -118,6 +130,4 @@ diff -r 483f23f89563 src/pkg/runtime/cgocall.c
  } 
 
 }}}
-
-
 
