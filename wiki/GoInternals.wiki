@@ -15,7 +15,7 @@ A simpler version of the goroutine concept can be found in Russ Cox's [http://sw
 
 == Implementation Details == 
 
-*This section is to be verified*
+*This section needs to be reviewed*
 
 Goroutines are multiplexed across threads. The goroutine's stack is managed by the Go compiler/runtime independently of the OS stack, which is why calling external C functions require the stacks to be switched. 
 
