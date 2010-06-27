@@ -8,3 +8,25 @@ The material here is gathered from various sources and in some cases is derived 
 = Calling C functions from Go =
 
 [http://groups.google.com/group/golang-nuts/browse_thread/thread/34d6a5b928242d25/2c786e7691b5bad1?q=#2c786e7691b5bad1 Discussion on overheads in calling C functions]
+
+= Difference between goc and cgo =
+
+Paraphrased from [http://groups.google.com/group/golang-nuts/browse_thread/thread/d1824928719244c6/100b92392a42b7af?lnk=gst&q=goc+cgo#100b92392a42b7af discussion on implementing SWIG interface]
+
+There are two different mechanisms for interfacing with C. One is for writing Go code to wrap C, and the other is for writing C code to implement Go. 
+
+cgo is the preferred method for integrating with external C libraries.  cgo is the one with the import "C" lines and which is documented by  'godoc cgo' and http://golang.org/cmd/cgo/. This is the one people are encouraged to use. 
+
+The examples of using this tool are in `$GOROOT/misc/cgo/*`; these help to make clear how to write cgo code. The pseudo-package "C" contains whatever C symbols you would like to use, as possible.  It also contains two pre-defined symbols that you won't find in the C libraries: CString(s) allocates and returns a new C string that is a copy of the given Go string, and GoString(s) does the reverse. 
+
+The cgo is for writing Go code that wraps external C code which has been compiled with gcc and is linked in at runtime as a shared library: think wrapping gmp, gtk, sdl, openssl, etc. Cgo's role is to let you write Go code that uses C by referring to names in the pseudo-package you get by doing import "C". 
+
+Some files in src/pkg/runtime that were unfortunately named `*.cgo` (now renamed to `*.goc`).  Those use a different tool that can be thought of as a precursor to the "real" cgo. Those are for writing the low-level bits of runtime and are basically C files with some functions written using Go declarations instead of C declarations.  They cannot #include standard system libraries, only the low-level runtime headers, and they cannot include Go code - you're forced to write in C. That tool is intentionally undocumented. 
+
+The unfortunately-named cgo2c in the runtime directory is for writing C code callable from Go to implement basic runtime operations like allocating data or concatenating strings. That C code is compiled with 6c, not gcc, and it is linked statically into the program just like a Go source file would be. Cgo2c's role is to let the Go compiler emit calls to runtime functions that happen to be implemented in C.  The only useful thing it does is rewrite the Go-style function declarations into equivalent C-style ones, inserting appropriate padding so that they end up with the same memory layout. 
+
+
+
+
+
+
