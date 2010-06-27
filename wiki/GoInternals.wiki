@@ -1,0 +1,10 @@
+#summary Collection of various bits about Go Internals
+
+= Introduction =
+
+The material here is gathered from various sources and in some cases is derived from information obtained by reading Go source code.
+
+
+= Calling C functions from Go =
+
+[http://groups.google.com/group/golang-nuts/browse_thread/thread/34d6a5b928242d25/2c786e7691b5bad1?q=#2c786e7691b5bad1 Discussion on overheads in calling C functions]
