@@ -25,9 +25,9 @@ The Go runtime maintains a pool of threads for running goroutines. If a particul
 
 The main advantage of goroutines are that they allow a large number of concurrent activities to be executed in parallel using a small number of threads. Unlike threadpool implementations in other languages, a goroutine that blocks due to synchronisation, does not occupy a thread. Instead it is moved out to allow other goroutines to run. 
 
-External system calls or calls to C function libraries could block the thread, which is why in this scenario, the runtime allocates a new thread if necessary.
+External system calls or calls to C function libraries could however block the thread, which is why in this scenario, the runtime allocates a new thread if necessary.
 
-The main side effect of this implementation choice is that all synchronisation and calls to external libraries in Go programs must be done in cooperation with the Go scheduler. This makes external function calls expensive in the general case (see below), and also means that it is best to use the inbuilt synchronisation facilities in the language, such as channels, mutexes, etc.
+The main side effect of this implementation choice is that all synchronisation and calls to external libraries in Go programs must be done in cooperation with the Go scheduler. This makes external function calls expensive in the general case (see below), and also means that it is best to use the inbuilt synchronisation facilities in the language, such as channels, sync.Mutex, etc rather than invoking native OS primitives.
 
 = Difference between goc and cgo =
 
