@@ -140,5 +140,17 @@ diff -r 483f23f89563 src/pkg/runtime/cgocall.c
 - 
 -       return; 
  } 
-
 }}}
+
+= Blogs Posts on Go Internals = 
+
+  * [http://research.swtch.com/2010/02/gos-package-name-space.html Go Package Namespace]
+  * [http://research.swtch.com/2009/12/go-data-structures-interfaces.html Go Interfaces]
+  * [http://research.swtch.com/2009/11/go-data-structures.html How Go types are implemented]
+  * [http://research.swtch.com/2010/03/broken-abstractions-in-go.html How defer statement is implemented]
+  * [http://www.airs.com/blog/archives/376 Implementation of panic/recover in GCC Go compiler]
+  * [http://www.airs.com/blog/archives/309 Go Linkage Names]
+  * [http://www.airs.com/blog/archives/283 Go New/Make]
+  * [http://www.airs.com/blog/archives/277 Go Interfaces]
+  * [http://www.airs.com/blog/archives/281 Go Interface values]
+  * [http://www.airs.com/blog/archives/275 Go Channels]
