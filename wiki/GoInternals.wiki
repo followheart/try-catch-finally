@@ -150,6 +150,12 @@ diff -r 483f23f89563 src/pkg/runtime/cgocall.c
 
 Go Channels are implemented in is [http://golang.org/src/pkg/runtime/chan.c $goroot/src/pkg/runtime/chan.c]. More description to follow.
 
+= Go Synchronisation Primitives =
+
+Go offers the sync.Mutex and sync.RWMutex for programmers who would like to manage their own synchronisation. Note that the preferred approach to achieve concurrency in Go is by using channels as message passing queues between Goroutines. 
+
+The mutex implementations can be found in [http://golang.org/src/pkg/sync/ $goroot/src/pkg/sync/]
+
 = Go Garbage Collector =
 
 Currently Go has a simple mark and sweep garbage collector. As it is likely to be replaced soon, there is not much point in documenting the current implementation. The source for the garbage collector is [http://golang.org/src/pkg/runtime/mgc0.c $goroot/src/pkg/runtime/mgc0.c]
