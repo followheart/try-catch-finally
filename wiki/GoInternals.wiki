@@ -142,6 +142,10 @@ diff -r 483f23f89563 src/pkg/runtime/cgocall.c
  } 
 }}}
 
+= Go Garbage Collector =
+
+Currently Go has a simple mark and sweep garbage collector. As it is likely to be replaced soon, there is not much point in documenting the current implementation. The source for the garbage collector is [http://golang.org/src/pkg/runtime/mgc0.c $goroot/src/pkg/runtime/mgc0.c]
+
 = Blogs Posts on Go Internals =
 
 === Go Interfaces === 
