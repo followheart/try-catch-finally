@@ -29,7 +29,9 @@ External system calls or calls to C function libraries could however block the t
 
 The main side effect of this implementation choice is that all synchronisation and calls to external libraries in Go programs must be done in cooperation with the Go scheduler. This can make external function calls expensive in the general case (as explained below), and also means that it is best to use the inbuilt synchronisation facilities in the language, such as channels, sync.Mutex, etc rather than invoking native OS primitives.
 
-= Difference between goc and cgo =
+= Calling external C functions from Go =
+
+== Difference between goc and cgo ==
 
 Paraphrased from [http://groups.google.com/group/golang-nuts/browse_thread/thread/d1824928719244c6/100b92392a42b7af?lnk=gst&q=goc+cgo#100b92392a42b7af discussion on implementing SWIG interface]
 
@@ -45,7 +47,7 @@ Some files in src/pkg/runtime that were unfortunately named `*.cgo` (now renamed
 
 The unfortunately-named cgo2c in the runtime directory is for writing C code callable from Go to implement basic runtime operations like allocating data or concatenating strings. That C code is compiled with 6c, not gcc, and it is linked statically into the program just like a Go source file would be. Cgo2c's role is to let the Go compiler emit calls to runtime functions that happen to be implemented in C.  The only useful thing it does is rewrite the Go-style function declarations into equivalent C-style ones, inserting appropriate padding so that they end up with the same memory layout. 
 
-= Overhead in calling C functions =
+== Overhead of calling C functions ==
 
 [http://groups.google.com/group/golang-nuts/browse_thread/thread/34d6a5b928242d25/2c786e7691b5bad1?q=#2c786e7691b5bad1 Discussion on overheads in calling C functions]
 
