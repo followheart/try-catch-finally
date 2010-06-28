@@ -23,6 +23,8 @@ Goroutines are cooperatively scheduled by the Go scheduler (implemented in [http
 
 The Go runtime maintains a pool of threads for running goroutines. If a particular goroutine will block due to a system call, a new thread is created if there are other goroutines waiting to run. The runtime requires that either goroutines are blocked in a system call, or at least one goroutine is runnable. If this is not true, then the runtime aborts with an error reporting a deadlock. 
 
+The global setting GOMAXPROCS controls how many threads Go scheduler will use to run goroutines not blocked in system calls.
+
 The main advantage of goroutines are that they allow a large number of concurrent activities to be executed in parallel using a small number of threads. Unlike threadpool implementations in other languages, a goroutine that blocks due to synchronisation, does not cause the host thread to block. Instead it is swapped out to allow other goroutines to run. Combined with small stacks per goroutine, this feature allows a large number of goroutines to be started very cheaply.
 
 External system calls or calls to C function libraries could however block the thread, which is why in this scenario, the runtime allocates a new thread if necessary.
