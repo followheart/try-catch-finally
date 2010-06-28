@@ -7,7 +7,7 @@ The material here is gathered from various sources and in some cases is derived 
 = GoRoutines =
 
 == History ==
-GoRoutines in Go are based the concept of coroutines proposed by Hoare. The implementation builds upon previous work done by the Go inventors at Bell Labs. A good account of this history can be here:
+GoRoutines in Go are based the concept of coroutines proposed by Hoare. The implementation builds upon previous work done by the Go inventors at Bell Labs. A good account of this history can be found below:
 
 [http://swtch.com/~rsc/thread/ http://swtch.com/~rsc/thread/]
 
@@ -19,15 +19,15 @@ A simpler version of the goroutine concept can be found in Russ Cox's [http://sw
 
 Goroutines are multiplexed across threads. The goroutine's stack is managed by the Go compiler/runtime independently of the OS stack, which is why calling external C functions require the stacks to be switched. 
 
-Goroutines are cooperatively scheduled by the Go scheduler (implemented in `$goroot/src/pkg/runtime/proc.c`). The Go scheduler is called at suitable times, such as when a goroutine is about to block in a system call or when getting a lock.
+Goroutines are cooperatively scheduled by the Go scheduler (implemented in [http://golang.org/src/pkg/runtime/proc.c `$goroot/src/pkg/runtime/proc.c`]. The Go scheduler is called at suitable times, such as when a goroutine is about to block in a system call or when getting a lock or is allocating memory.
 
-The Go runtime maintains a pool of threads for running goroutines. If a particular goroutine will block due to a system call, a new thread is created if there are other goroutines waiting to run. The runtime requires that either goroutines be blocked in a system call, or at least one goroutine must be runnable. If this is not true, then the runtime aborts with an error reporting a deadlock. 
+The Go runtime maintains a pool of threads for running goroutines. If a particular goroutine will block due to a system call, a new thread is created if there are other goroutines waiting to run. The runtime requires that either goroutines are blocked in a system call, or at least one goroutine is runnable. If this is not true, then the runtime aborts with an error reporting a deadlock. 
 
-The main advantage of goroutines are that they allow a large number of concurrent activities to be executed in parallel using a small number of threads. Unlike threadpool implementations in other languages, a goroutine that blocks due to synchronisation, does not occupy a thread. Instead it is moved out to allow other goroutines to run. 
+The main advantage of goroutines are that they allow a large number of concurrent activities to be executed in parallel using a small number of threads. Unlike threadpool implementations in other languages, a goroutine that blocks due to synchronisation, does not cause the host thread to block. Instead it is swapped out to allow other goroutines to run. Combined with small stacks per goroutine, this feature allows a large number of goroutines to be started very cheaply.
 
 External system calls or calls to C function libraries could however block the thread, which is why in this scenario, the runtime allocates a new thread if necessary.
 
-The main side effect of this implementation choice is that all synchronisation and calls to external libraries in Go programs must be done in cooperation with the Go scheduler. This makes external function calls expensive in the general case (see below), and also means that it is best to use the inbuilt synchronisation facilities in the language, such as channels, sync.Mutex, etc rather than invoking native OS primitives.
+The main side effect of this implementation choice is that all synchronisation and calls to external libraries in Go programs must be done in cooperation with the Go scheduler. This can make external function calls expensive in the general case (as explained below), and also means that it is best to use the inbuilt synchronisation facilities in the language, such as channels, sync.Mutex, etc rather than invoking native OS primitives.
 
 = Difference between goc and cgo =
 
@@ -51,7 +51,7 @@ The unfortunately-named cgo2c in the runtime directory is for writing C code cal
 
 Relevant bits are paraphrased below:
 
-The performance of a single cgo call is slower than a function call by a factor of 40. 
+A present the performance of a single no-op cgo call is slower than a no-op Go function call by a factor of 40. 
 
 It is assumed by some people that cgo runs C calls in a separate thread, and thus calling a cgo call involves a thread switch.  That is not true. Cgo does run C calls on a separate stack, the one that was allocated by the operating system and is thus assumed to be big enough to run ordinary C code (the goroutine stacks are not). It's cheap - just a couple register moves.  If this is not done, the C function will overflow the goroutine stack and suffer silent, mysterious memory corruption.  
 
