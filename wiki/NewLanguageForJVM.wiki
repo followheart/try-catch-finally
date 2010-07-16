@@ -22,8 +22,322 @@ Non Features
   * No support for the select command in Go
   * Any thing else that does not map directly to a feature in Java. 
 
-= Grammer =
+== Grammer ==
 
-= Specification =
+== Specification ==
 
-= Examples/equivalent Java code =
+== Examples/equivalent Java code ==
+
+=== hello world ===
+{{{
+module my.pkg
+func Main() {
+  print("Hello World!")
+}
+}}}
+
+translates to:
+
+{{{
+package my.pkg;
+public final class Statics {
+  public static void main(String[] args) {
+    System.out.println("Hello World");
+  }
+}
+}}}
+
+=== Another example ===
+{{{
+module my.pkg
+func Main() {
+  for i := 0; i < 10; i++ {
+    print("i = " + i)
+  }
+}
+}}}
+
+is converted to:
+
+{{{
+package my.pkg;
+public final class Statics {
+  public static void main(String[] args) {
+    for (int i = 0; i < 10; i++) {
+      System.out.println("i = " + i);
+    }
+  }
+}
+}}}
+
+=== More functions ===
+
+{{{
+module my.pkg
+func add(a, b int) int {
+  return a+b
+}
+}}}
+
+Translates to:
+
+{{{
+package my.pkg;
+public final class Statics {
+  static void add(int a, int b)  {
+    return a+b;
+  }
+}
+}}}
+
+=== Classes and Interfaces ===
+
+{{{
+module my.pkg
+interface Lock {
+  Lock()
+  Unlock()
+  IsLocked() bool
+}
+
+// MyLock implements interface Lock
+type MyLock [Lock] {
+  locked bool
+}
+
+func MyLock.Lock() {
+  locked = true
+}
+
+func MyLock.Unlock() {
+  locked = false
+}
+
+func MyLock.IsLocked() bool {
+  return locked
+}
+}}}
+
+Maybe also support:
+
+{{{
+type MyLock [Lock] {
+  locked bool
+  func Lock() {
+    locked = true
+  }
+  func Unlock() {
+    locked = false
+  }
+  func IsLocked() {
+    return locked
+  }
+}
+}}}
+
+Translates to:
+
+{{{
+package my.pkg;
+public interface Lock {
+  void Lock();
+  void Unlock();
+  boolean IsLocked();
+}
+
+// All classes are translated as final unless explicitly marked
+inheritable
+public final class MyLock implements Lock {
+  boolean locked;
+  public final void Lock() {
+    locked = true;
+  }
+  public final void Unlock() {
+    locked = false;
+  }
+  public final boolean IsLocked() {
+    return locked;
+  }
+}
+}}}
+
+=== Variables ===
+{{{
+module my.pkg
+func foo() {
+  s := “hello”
+  i := 0
+  g := 5.5
+}
+
+func bar() {
+  var a, b int
+  var s, t string
+  var f float
+}
+
+func maps() {
+  m := new map[string] int { "a": 1, "b": 2, "c": 3}
+  m["z"] ?= 26
+  array := new [] int { 1, 2, 3, 4}
+  for i:array {
+    print(i)
+  }
+}
+}}}
+
+translates to:
+
+{{{
+package my.pkg;
+
+import java.util.concurrent.ConcurrentHashMap;
+
+public final class Statics {
+
+  static void foo() {
+    String s = "hello";
+    int i = 0;
+    double g = 5.5;
+  }
+
+  static void bar() {
+    int a, b;
+    String s, t;
+    double f;
+  }
+
+  static void maps() {
+    ConcurrentHashMap<String, Integer> m = new ConcurrentHashMap<String, Integer>();
+    m.put("a", 1);
+    m.put("b", 2);
+    m.put("c", 3);
+    m.putIfAbsent("z", 26);
+    int[] array = new int[] { 1, 2, 3, 4 };
+    for (int i : array) {
+      System.out.println(i);
+    }
+  }
+}
+}}}
+
+=== Channels ===
+{{{
+module my.pkg
+func producer(c1 chan int, N int, s chan bool) {
+  for i := 0; i < N; i++ {
+    c1 <- i
+  }
+  s <- true
+}
+
+func consumer(c1 chan int, N int, s chan bool) {
+  for i := 0; i < N; i++ {
+    <-c1
+  }
+  s <- true
+}
+
+func Main() {
+  const N = 5
+  c1 := new chan int
+  s := new chan bool
+  run producer(c1, N, s)
+  run consumer(c1, N, s)
+  <-s
+  <-s
+}
+}}}
+
+Java version:
+
+{{{
+package my.pkg;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+
+public final class Statics {
+
+static void producer(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
+  try {
+    for (int i = 0; i < N; i++) {
+      c1.put(i);
+    }
+    s.put(true);
+  } catch (InterruptedException e) {
+    // map to RuntimeException?
+  }
+}
+
+static void consumer(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
+  try {
+    for (int i = 0; i < N; i++) {
+      c1.take();
+    }
+    s.put(true);
+  } catch (InterruptedException e) {
+    // map to RuntimeException?
+  }
+}
+
+// Should be anonymous
+final class ProducerRunnable implements Runnable {
+  final SynchronousQueue<Integer> c1;
+  final int N;
+  final SynchronousQueue<Boolean> s;
+
+  ProducerRunnable(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
+    this.c1 = c1;
+    this.N = N;
+    this.s = s;
+  }
+
+  public void run() {
+    producer(c1, N, s);
+  }
+}
+
+final class ConsumerRunnable implements Runnable {
+  final SynchronousQueue<Integer> c1;
+  final int N;
+  final SynchronousQueue<Boolean> s;
+
+  ConsumerRunnable(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
+    this.c1 = c1;
+    this.N = N;
+    this.s = s;
+  }
+
+  public void run() {
+    consumer(c1, N, s);
+  }
+}
+
+static ExecutorService DefaultExecutorService = Executors.newCachedThreadPool();
+
+  public static void main(String args[]) {
+    try {
+      SynchronousQueue<Integer> c1 = new SynchronousQueue<Integer>();
+      SynchronousQueue<Boolean> s = new SynchronousQueue<Boolean>();
+      final int N = 50;
+      DefaultExecutorService.submit(new ProducerRunnable(c1, N, s));
+      DefaultExecutorService.submit(new ConsumerRunnable(c1, N, s));
+      s.take();
+      s.take();
+    } catch (Exception e) {
+    } finally {
+      DefaultExecutorService.shutdown();
+    }
+  }
+}
+}}}
+
+=== more channels ===
+
+`chan string` maps to `SynchronousQueue<String>`
+
+`chan(5) string` maps to `LinkedBlockingQueue<String>(5)`
+
+`chan(?) string` maps to `ConcurrentLinkedQueue<String>` 
