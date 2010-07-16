@@ -321,7 +321,7 @@ static ExecutorService DefaultExecutorService = Executors.newCachedThreadPool();
     try {
       SynchronousQueue<Integer> c1 = new SynchronousQueue<Integer>();
       SynchronousQueue<Boolean> s = new SynchronousQueue<Boolean>();
-      final int N = 50;
+      final int N = 5;
       DefaultExecutorService.submit(new ProducerRunnable(c1, N, s));
       DefaultExecutorService.submit(new ConsumerRunnable(c1, N, s));
       s.take();
@@ -341,3 +341,141 @@ static ExecutorService DefaultExecutorService = Executors.newCachedThreadPool();
 `chan(5) string` maps to `LinkedBlockingQueue<String>(5)`
 
 `chan(?) string` maps to `ConcurrentLinkedQueue<String>` 
+
+=== atomics and volatile ===
+
+{{{
+type T {
+  stop volatile bool
+  i atomic int
+}
+func T.ops() {
+  i++
+  ++i
+  i = 3 ? 1;
+  i--
+  i += 1
+  i -= 2
+  v := i
+  v = i++
+}
+func T.Stop() {
+  stop = true
+}
+}}}
+
+Translates to
+
+{{{
+public final class T {
+  volatile boolean stop;
+  AtomicInteger i = new AtomicInteger();
+
+  final void ops() {
+    i.getAndIncrement();
+    i.incrementAndGet();
+    i.compareAndSet(3, 1);
+    i.getAndDecrement();
+    i.addAndGet(1);
+    i.addAndGet(-2);
+    int v = i.get();
+    v = i.getAndIncrement();
+  }
+  public final void Stop() {
+    stop = true;
+  }
+}
+}}}
+
+=== importing Java types ===
+
+{{{
+// imported types can be given a local alias
+// so in a way string is an alias for String
+import java.util.ArrayList list
+
+func foo() {
+  v := new list<string>()
+  v.add("hello")
+  v.add("world")
+  for x:v {
+    print(x)
+  }
+}
+}}}
+
+translates to:
+
+{{{
+import java.util.ArrayList
+public final class Statics {
+  static void foo() {
+    ArrayList<String> v = new ArrayList<String>();
+
+    v.add(“hello”);
+    v.add(“world”);
+    for (String x:v) {
+      System.out.println(x);
+    }
+  }
+}
+}}}
+
+=== Discarding exceptions ===
+
+{{{
+// Support a syntax for discarding exceptions
+func foo() {
+  try Thread.sleep(2)    // silently consumes InterruptedException
+}
+}}}
+
+translates to:
+
+{{{
+public final class Statics {
+  static void foo() {
+    try {
+      Thread.sleep(2)
+    } catch (Exception e) {
+      // ignored
+    }
+  }
+}
+}}}
+
+=== Exceptions ===
+{{{
+import java.io.FileReader
+// a default try/catch/finally block
+// this might be too wierd !!!
+func foo()  {
+  f := new FileReader(“testfile”)
+} catch e {
+  e.printStackTrace()
+} finally {
+  try f.close()
+}
+}}}
+
+translates to
+
+{{{
+import java.io.FileReader
+public final class Statics {
+  static void foo() {
+    FileReader f = null;
+    try {
+      f = new FileReader(“testfile”);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      if (f != null) {
+        try {
+          f.close();
+        } catch (Exception e) {
+        }
+    }
+  }
+}
+}}} 
