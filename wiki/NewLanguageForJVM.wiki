@@ -470,11 +470,11 @@ public final class Statics {
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
-      if (f != null) {
-        try {
-          f.close();
-        } catch (Exception e) {
-        }
+    if (f != null) {
+      try {
+        f.close();
+      } catch (Exception e) {
+      }
     }
   }
 }
