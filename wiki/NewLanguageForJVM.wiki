@@ -426,7 +426,7 @@ public final class Statics {
 {{{
 // Support a syntax for discarding exceptions
 func foo() {
-  try Thread.sleep(2)    // silently consumes InterruptedException
+  catch Thread.sleep(2)    // silently consumes InterruptedException
 }
 }}}
 
@@ -454,7 +454,7 @@ func foo()  {
 } catch e {
   e.printStackTrace()
 } finally {
-  try f.close()
+  catch f.close()
 }
 }}}
 
