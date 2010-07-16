@@ -1,0 +1,29 @@
+#summary Specification of a new Language for the JVM
+
+= Introduction =
+
+This is a specification for a new programming language for the JVM. 
+
+The new language is an attempt to implement a Google Go type language on the JVM. The goal is to keep to the features supported efficiently in the JVM but (taking inspiration from Go), reduce the verbosity in the language, and add some concurrency features to the language.
+
+The key features proposed in the new language are:
+
+  * static type inference (I am aware of the arguments for/against but on balance prefer to support this, while allowing explicit type declarations where needed).
+  * channels - add syntactic support for creating either a synchronous or buffered queue (using standard Java concurrency library)
+  * maps - syntactic support for hash maps
+  * tasks - syntactic support for submitting tasks to a thread pool using the concurrency library
+  * convention over boilerplate  - like Go, if an identifier starts with a capital, make it automatically public, else private, and use similar techniques to reduce boilerplate stuff
+  * static methods should not have to be declared in a class - to automatically create a default class per package to hold static methods
+  * will use standard Java libraries; no language specific library
+  * completely interoperable with Java; it will be possible to invoke existing Java code from the new language without any extra effort, and conversely, it should be possible to invoke code implemented in the new language from Java.
+
+Non Features 
+  * Go interfaces; the new language will support standard Java type interfaces
+  * No support for the select command in Go
+  * Any thing else that does not map directly to a feature in Java. 
+
+= Grammer =
+
+= Specification =
+
+= Examples/equivalent Java code =
