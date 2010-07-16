@@ -18,8 +18,7 @@ The key features proposed in the new language are:
   * completely interoperable with Java; it will be possible to invoke existing Java code from the new language without any extra effort, and conversely, it should be possible to invoke code implemented in the new language from Java.
   * Must be a small language with few constructs - smaller than Java if possible (but some additions for syntactic support for maps, channels, tasks, etc.). It should be possible for a Java programmer to learn in a day.
   * Not a scripting language - main use case is writing server applications. 
-  * Should provide an API for replacing default implementations of certain built in types 
-such as channels, maps, threadpools, tasks etc. so that the implementations are pluggable.
+  * Should provide an API for replacing default implementations of certain built in types such as channels, maps, threadpools, tasks etc. so that the implementations are pluggable.
   * Similar to Go but not exactly the same - no point adding a feature that cannot be done efficiently in the JVM. 
   * Will support closures, but implementation may be deferred until JVM 7 becomes available
   * Will allow use of generics implemented in Java, but no support for creating generic types (this may change later). 
