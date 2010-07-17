@@ -16,8 +16,8 @@ The key features proposed in the new language are:
   * static methods should not have to be declared in a class - to automatically create a default class per package to hold static methods
   * will use standard Java libraries; no language specific library
   * completely interoperable with Java; it will be possible to invoke existing Java code from the new language without any extra effort, and conversely, it should be possible to invoke code implemented in the new language from Java.
-  * must be a small language with few constructs - smaller than Java if possible (but some additions for syntactic support for maps, channels, tasks, etc.). It should be possible for a Java programmer to learn in a day.
-  * not a scripting language - main use case is writing server applications. 
+  * must be a small language with few constructs/keywords - smaller than Java if possible (but some additions for syntactic support for maps, channels, tasks, etc.). It should be possible for a Java programmer to learn in a day.
+  * not a scripting or dynamic language - main use case is writing server applications. 
   * should provide an API for replacing default implementations of certain built in types such as channels, maps, threadpools, tasks etc. so that the implementations are pluggable.
   * similar to Go but not exactly the same - no point adding a feature that cannot be done efficiently in the JVM. 
   * will support closures, but implementation may be deferred until JVM 7 becomes available
@@ -26,7 +26,7 @@ The key features proposed in the new language are:
 Non Features 
   * Go interfaces; the new language will support standard Java type interfaces
   * No support for the select command in Go
-  * defer/panic/recover
+  * defer/panic/recover - standard try/catch/finally as in Java
   * Any thing else that does not map directly to a feature in Java. 
 
 == Status ==
@@ -98,7 +98,7 @@ Translates to:
 {{{
 package my.pkg;
 public final class Statics {
-  static void add(int a, int b)  {
+  static int add(int a, int b)  {
     return a+b;
   }
 }
@@ -143,7 +143,7 @@ type MyLock [Lock] {
   func Unlock() {
     locked = false
   }
-  func IsLocked() {
+  func IsLocked() bool {
     return locked
   }
 }
