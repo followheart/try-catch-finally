@@ -178,7 +178,7 @@ public final class MyLock implements Lock {
 {{{
 module my.pkg
 func foo() {
-  s := “hello”
+  s := "hello"
   i := 0
   g := 5.5
 }
@@ -273,62 +273,62 @@ import java.util.concurrent.SynchronousQueue;
 
 public final class Statics {
 
-static void producer(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
-  try {
-    for (int i = 0; i < N; i++) {
-      c1.put(i);
+  static void producer(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
+    try {
+      for (int i = 0; i < N; i++) {
+        c1.put(i);
+      }
+      s.put(true);
+    } catch (InterruptedException e) {
+      // map to RuntimeException?
     }
-    s.put(true);
-  } catch (InterruptedException e) {
-    // map to RuntimeException?
   }
-}
 
-static void consumer(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
-  try {
-    for (int i = 0; i < N; i++) {
-      c1.take();
+  static void consumer(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
+    try {
+      for (int i = 0; i < N; i++) {
+        c1.take();
+      }
+      s.put(true);
+    } catch (InterruptedException e) {
+      // map to RuntimeException?
     }
-    s.put(true);
-  } catch (InterruptedException e) {
-    // map to RuntimeException?
-  }
-}
-
-// Should be anonymous
-final class ProducerRunnable implements Runnable {
-  final SynchronousQueue<Integer> c1;
-  final int N;
-  final SynchronousQueue<Boolean> s;
-
-  ProducerRunnable(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
-    this.c1 = c1;
-    this.N = N;
-    this.s = s;
   }
 
-  public void run() {
-    producer(c1, N, s);
+  // Should be anonymous
+  final class ProducerRunnable implements Runnable {
+    final SynchronousQueue<Integer> c1;
+    final int N;
+    final SynchronousQueue<Boolean> s;
+
+    ProducerRunnable(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
+      this.c1 = c1;
+      this.N = N;
+      this.s = s;
+    }
+
+    public void run() {
+      producer(c1, N, s);
+    }
   }
-}
 
-final class ConsumerRunnable implements Runnable {
-  final SynchronousQueue<Integer> c1;
-  final int N;
-  final SynchronousQueue<Boolean> s;
+  final class ConsumerRunnable implements Runnable {
+    final SynchronousQueue<Integer> c1;
+    final int N;
+    final SynchronousQueue<Boolean> s;
 
-  ConsumerRunnable(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
-    this.c1 = c1;
-    this.N = N;
-    this.s = s;
+    ConsumerRunnable(SynchronousQueue<Integer> c1, int N, SynchronousQueue<Boolean> s) {
+      this.c1 = c1;
+      this.N = N;
+      this.s = s;
+    }
+    public void run() {
+      consumer(c1, N, s);
+    }
   }
 
-  public void run() {
-    consumer(c1, N, s);
-  }
-}
-
-static ExecutorService DefaultExecutorService = Executors.newCachedThreadPool();
+  // Just to show what happens conceptually
+  static ExecutorService DefaultExecutorService = Executors.newCachedThreadPool();
 
   public static void main(String args[]) {
     try {
@@ -347,7 +347,7 @@ static ExecutorService DefaultExecutorService = Executors.newCachedThreadPool();
 }
 }}}
 
-=== more channels ===
+=== More on channels ===
 
 `chan string` maps to `SynchronousQueue<String>`
 
@@ -355,7 +355,7 @@ static ExecutorService DefaultExecutorService = Executors.newCachedThreadPool();
 
 `chan(?) string` maps to `ConcurrentLinkedQueue<String>` 
 
-=== atomics and volatile ===
+=== Atomic types and volatile ===
 
 {{{
 type T {
@@ -463,7 +463,7 @@ import java.io.FileReader
 // a default try/catch/finally block
 // this might be too wierd !!!
 func foo()  {
-  f := new FileReader(“testfile”)
+  f := new FileReader("testfile")
 } catch e {
   e.printStackTrace()
 } finally {
@@ -479,7 +479,7 @@ public final class Statics {
   static void foo() {
     FileReader f = null;
     try {
-      f = new FileReader(“testfile”);
+      f = new FileReader("testfile");
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
