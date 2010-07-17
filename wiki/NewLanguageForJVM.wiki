@@ -16,16 +16,17 @@ The key features proposed in the new language are:
   * static methods should not have to be declared in a class - to automatically create a default class per package to hold static methods
   * will use standard Java libraries; no language specific library
   * completely interoperable with Java; it will be possible to invoke existing Java code from the new language without any extra effort, and conversely, it should be possible to invoke code implemented in the new language from Java.
-  * Must be a small language with few constructs - smaller than Java if possible (but some additions for syntactic support for maps, channels, tasks, etc.). It should be possible for a Java programmer to learn in a day.
-  * Not a scripting language - main use case is writing server applications. 
-  * Should provide an API for replacing default implementations of certain built in types such as channels, maps, threadpools, tasks etc. so that the implementations are pluggable.
-  * Similar to Go but not exactly the same - no point adding a feature that cannot be done efficiently in the JVM. 
-  * Will support closures, but implementation may be deferred until JVM 7 becomes available
-  * Will allow use of generics implemented in Java, but no support for creating generic types (this may change later). 
+  * must be a small language with few constructs - smaller than Java if possible (but some additions for syntactic support for maps, channels, tasks, etc.). It should be possible for a Java programmer to learn in a day.
+  * not a scripting language - main use case is writing server applications. 
+  * should provide an API for replacing default implementations of certain built in types such as channels, maps, threadpools, tasks etc. so that the implementations are pluggable.
+  * similar to Go but not exactly the same - no point adding a feature that cannot be done efficiently in the JVM. 
+  * will support closures, but implementation may be deferred until JVM 7 becomes available
+  * will allow use of generics implemented in Java, but no support for creating generic types (this may change later). 
 
 Non Features 
   * Go interfaces; the new language will support standard Java type interfaces
   * No support for the select command in Go
+  * defer/panic/recover
   * Any thing else that does not map directly to a feature in Java. 
 
 == Status ==
@@ -425,8 +426,8 @@ public final class Statics {
   static void foo() {
     ArrayList<String> v = new ArrayList<String>();
 
-    v.add(“hello”);
-    v.add(“world”);
+    v.add("hello");
+    v.add("world");
     for (String x:v) {
       System.out.println(x);
     }
