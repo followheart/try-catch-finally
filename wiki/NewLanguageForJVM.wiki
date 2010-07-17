@@ -2,7 +2,7 @@
 
 = Introduction =
 
-This is a specification for a new programming language for the JVM. 
+This is the specification for a new programming language for the JVM. 
 
 The new language is an attempt to implement a Google Go type language on the JVM. The goal is to keep to the features supported efficiently in the JVM but (taking inspiration from Go), reduce the verbosity in the language, and add some concurrency features to the language.
 
