@@ -149,7 +149,8 @@ type MyLock [Lock] {
 }
 }}}
 
-Translates to:
+By default classes and methods are final.
+Therefore above translates to:
 
 {{{
 package my.pkg;
@@ -409,7 +410,7 @@ public final class T {
 import java.util.ArrayList list
 
 func foo() {
-  v := new list<string>()
+  v := new <string> list()
   v.add("hello")
   v.add("world")
   for x:v {
@@ -433,6 +434,48 @@ public final class Statics {
     }
   }
 }
+}}}
+
+=== Generics ===
+
+A generic interface:
+
+{{{
+
+interface <T>List {
+  Next() T
+  Add(T)
+}
+  
+}}}
+
+A generic class implementation:
+
+{{{
+
+type <T>MyList [<T>List] {
+}
+
+func <T>MyList.Add(t T) {
+}
+
+func <T>MyList.Next() T {
+  return null
+}
+
+}}}
+
+=== Anonymous classes ===
+
+The method declaration syntax is useful here:
+
+{{{
+  const name := "dibyendu"
+  r := func Runnable.run() {
+         print("hello" + name)
+       }
+  // submit the runnable instance to the threadpool
+  run r
 }}}
 
 === Discarding exceptions ===
