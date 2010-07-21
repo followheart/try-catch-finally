@@ -135,7 +135,7 @@ func MyLock.IsLocked() bool {
 Maybe also support:
 
 {{{
-type MyLock [Lock] {
+type MyLock : Lock {
   locked bool
   func Lock() {
     locked = true
@@ -410,7 +410,7 @@ public final class T {
 import java.util.ArrayList list
 
 func foo() {
-  v := new <string> list()
+  v := new list<string>()
   v.add("hello")
   v.add("world")
   for x:v {
@@ -442,7 +442,7 @@ A generic interface:
 
 {{{
 
-interface <T>List {
+interface List<T> {
   Next() T
   Add(T)
 }
@@ -453,13 +453,13 @@ A generic class implementation:
 
 {{{
 
-type <T>MyList [<T>List] {
+type MyList<T> : List<T> {
 }
 
-func <T>MyList.Add(t T) {
+func MyList<T>.Add(t T) {
 }
 
-func <T>MyList.Next() T {
+func MyList<T>.Next() T {
   return null
 }
 
